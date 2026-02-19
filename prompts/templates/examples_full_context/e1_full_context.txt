@@ -1,0 +1,120 @@
+User Prompt:
+<all_available_defs>
+structure BitVec (w : Nat) where
+  /-- Construct a `BitVec w` from a number less than `2^w`.
+  O(1), because we use `Fin` as the internal representation of a bitvector. -/
+  ofFin ::
+
+  /-- Interpret a bitvector as a number less than `2^w`.
+  O(1), because we use `Fin` as the internal representation of a bitvector. -/
+  toFin : Fin (hPow 2 w)
+</all_available_defs>
+
+<all_available_lemmas>
+theorem List.getElem_append_left{α : Type u_1} {l₁ l₂ : List α} {i : Nat} (hn : i < l₁.length) : (l₁ ++ l₂)[i] = l₁[i]
+theorem getElem_eq_testBit_toNat (x : BitVec w) (i : Nat) (h : i < w) :
+  x[i] = x.toNat.testBit i := rfl
+@[simp, grind =] theorem toNat_cons (b : Bool) (x : BitVec w) :
+    (cons b x).toNat = (b.toNat <<< w) ||| x.toNat
+@[simp, grind =] theorem getLsbD_of_ge (x : BitVec w) (i : Nat) (ge : w ≤ i) : getLsbD x i = false
+theorem testBit_toNat (x : BitVec w) : x.toNat.testBit i = x.getLsbD i
+</all_available_lemmas>
+
+<local_ctx>
+import Mathlib.Computability.NFA
+import Mathlib.Data.FinEnum
+import Mathlib.Data.Rel
+import Mathlib.Data.Vector.Basic
+import Blase.AutoStructs.ForLean
+
+open Set
+open Mathlib
+open SetRel
+
+-- this is better because card is defeq to n
+instance (α : Type) : Inter (Language α) := ⟨Set.inter⟩
+instance (α : Type) : Union (Language α) := ⟨Set.union⟩
+
+/--
+The set of `n`-tuples of bit vectors of an arbitrary width.
+-/
+structure BitVecs (n : Nat) where
+  w : Nat
+  bvs : List.Vector (BitVec w) n
+
+def BitVecs.cast (bvs : BitVecs n) (h : n = n') : BitVecs n' :=
+  { w := bvs.w, bvs := h ▸ bvs.bvs }
+
+abbrev BitVecs.empty : BitVecs n := ⟨0, List.Vector.replicate n .nil⟩
+abbrev BitVecs.singleton {w : Nat} (bv : BitVec w) : BitVecs 1 := ⟨w, bv ::ᵥ .nil⟩
+abbrev BitVecs.pair {w : Nat} (bv1 bv2 : BitVec w) : BitVecs 2 := ⟨w, bv1 ::ᵥ bv2 ::ᵥ .nil⟩
+
+/--
+The set of `n`-tuples of bit vectors of an arbitrary width, encoded as a list of
+bit vectors of width `n`. The width of the encoded bit vectors is the length of
+the list.
+-/
+abbrev BitVecs' (n : Nat) := List (BitVec n)
+
+@[simps]
+def dec (bvs' : BitVecs' n) : BitVecs n where
+  w := bvs'.length
+  bvs := List.Vector.ofFn fun k => BitVec.ofFn fun i => bvs'[i].getLsbD k
+
+@[simp]
+</local_ctx>
+
+<target_theorem>
+lemma dec_snoc n (bvs' : BitVecs' n) (a : BitVec n) :
+  dec (bvs' ++ [a]) =
+    { w := bvs'.length + 1
+      bvs := List.Vector.ofFn fun k =>
+        BitVec.cons (a.getLsbD k) ((dec bvs').bvs.get k) } :=
+</target_theorem>
+
+Agent Response:
+<reasoning> 
+The goal is to understand what `dec` does after appending one more bitvector `a` to `bvs'`. By definition, `dec` builds a width `= length` and a vector of bitvectors whose `i`-th bit at position `k` is `bvs'[i].getLsbD k`. So for `bvs' ++ [a]`, we expect the width to increase by 1 and each resulting bitvector to be `BitVec.cons` of the new bit coming from `a`.
+
+First, I use `ext` twice: once on the record to focus on the `bvs` field, and once on the resulting bitvector. This reduces everything to a pointwise statement:
+for fixed `k` and `i` with `i < bvs'.length + 1`,
+the bit `(bvs' ++ [a])[i].getLsbD k` should match the bit at index `i` of `BitVec.cons (a.getLsbD k) ((dec bvs').bvs.get k)`.
+
+At this point I need a clean description of indexing into `BitVec.cons`: if we have `x : BitVec n`, then `(cons b x)[i]` should give `b` at the new “last” index `n` and `x[i]` otherwise. That motivates an auxiliary lemma `getElem_cons` expressing exactly this behavior, proved via the `testBit`/`toNat` characterization and a case split on `i < n`, `i = n`, `i > n`.
+
+Using `getElem_cons`, the RHS becomes an `if` on whether `i = bvs'.length`. So I split into cases:
+- If `i = bvs'.length`, then `(bvs' ++ [a])[i]` is the appended `a`, so both sides reduce to `a.getLsbD k`.
+- If `i ≠ bvs'.length`, the bound `i < bvs'.length + 1` forces `i < bvs'.length`. Then `(bvs' ++ [a])[i] = bvs'[i]` by `List.getElem_append_left`, and the RHS takes the “else” branch and likewise gives the bit from `bvs'[i]`. In both subcases, `simp` (plus the definition of `dec`) finishes.
+
+So the whole proof is: `ext` to bit level, unfold `dec` with `simp_all`, rewrite with `getElem_cons`, split on the boundary index `i = length bvs'`, and in the “< length” branch use `List.getElem_append_left` and bounds to line up both sides.
+</reasoning> 
+
+<lean4_invented_lemmas>
+@[grind =]
+theorem getElem_cons {b : Bool} {n} {x : BitVec n} {i : Nat} (h : i < n + 1) :
+    (cons b x)[i] = if h : i = n then b else x[i] := by
+  simp only [BitVec.getElem_eq_testBit_toNat, BitVec.toNat_cons, Nat.testBit_or]
+  rw [Nat.testBit_shiftLeft]
+  rcases Nat.lt_trichotomy i n with i_lt_n | i_eq_n | n_lt_i
+  · have p1 : ¬(n ≤ i) := by omega
+    have p2 : i ≠ n := by omega
+    simp [p1, p2]
+  · simp only [i_eq_n, ge_iff_le, Nat.le_refl, decide_true, Nat.sub_self, Nat.testBit_zero,
+    Bool.true_and, BitVec.testBit_toNat, BitVec.getLsbD_of_ge, Bool.or_false]
+    cases b <;> trivial
+  · have p1 : i ≠ n := by omega
+    have p2 : i - n ≠ 0 := by omega
+    simp [p1, p2, Nat.testBit_bool_toNat]
+</lean4_invented_lemmas>
+
+<lean4_proof>
+by
+  ext k i hi <;> simp_all
+  rw [getElem_cons]
+  split
+  next heq => simp_all
+  next h =>
+    have hlt : i < List.length bvs' := by simp at hi; omega
+    rw [List.getElem_append_left hlt]
+    simp
+</lean4_proof>

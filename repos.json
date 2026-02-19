@@ -1,0 +1,249 @@
+{
+  "repos": {
+    "ArkLib": {
+      "url": "https://github.com/Verified-zkEVM/ArkLib.git",
+      "lean_toolchain": "leanprover/lean4:v4.22.0",
+      "has_mathlib": true,
+      "build_cmd": "lake build",
+      "license": "Apache-2.0",
+      "license_url": "https://github.com/Verified-zkEVM/ArkLib/blob/main/LICENSE",
+      "mathlib_rev": "79e94a093aff4a60fb1b1f92d9681e407124c2ca",
+      "commit": "779e3ec12d728796469cf638806fafe547dd7001",
+      "commit_date": "2026-01-23T16:03:09Z"
+    },
+    "CvxLean": {
+      "url": "https://github.com/verified-optimization/CvxLean.git",
+      "lean_toolchain": "leanprover/lean4:v4.8.0-rc1",
+      "has_mathlib": true,
+      "build_cmd": "lake build",
+      "license": "Apache-2.0",
+      "license_url": "https://github.com/verified-optimization/CvxLean/blob/main/LICENSE",
+      "mathlib_rev": "efad919b6687484ee26ac7c65a29c972d2112b8d",
+      "commit": "c62c2f292c6420f31a12e738ebebdfed50f6f840",
+      "commit_date": "2024-05-20T15:01:43Z"
+    },
+    "FVIntmax": {
+      "url": "https://github.com/NethermindEth/FVIntmax.git",
+      "lean_toolchain": "leanprover/lean4:v4.14.0-rc2",
+      "has_mathlib": true,
+      "build_cmd": "lake build",
+      "license": "Apache-2.0",
+      "license_url": "https://github.com/NethermindEth/FVIntmax/blob/main/LICENSE",
+      "mathlib_rev": "334be41cd6a4737ac24813c926c6f61fcedd1998",
+      "commit": "d7c4cbc5ec449471952ac5468f3b55bf61f5868e",
+      "commit_date": "2025-05-30T12:19:50Z"
+    },
+    "IntroEffects": {
+      "url": "https://github.com/ericluap/IntroEffects.git",
+      "lean_toolchain": "leanprover/lean4:v4.26.0",
+      "has_mathlib": false,
+      "build_cmd": "lake build",
+      "license": "Written-Consent",
+      "commit": "62aea95b3908214926bdc7d456bec3e39c18ad57",
+      "commit_date": "2025-07-31T16:46:37Z"
+    },
+    "LeanExprEvaluator": {
+      "url": "https://github.com/Paul-Passeron/LeanExprEvaluator.git",
+      "lean_toolchain": "leanprover/lean4:v4.24.0",
+      "has_mathlib": false,
+      "build_cmd": "lake build",
+      "license": "MIT",
+      "license_url": "https://github.com/Paul-Passeron/LeanExprEvaluator/blob/main/LICENSE",
+      "commit": "0aff7447dfb98c318b3f9f8fba4c427d2fa3920c",
+      "commit_date": "2025-10-25T18:01:29Z"
+    },
+    "Lentil": {
+      "url": "https://github.com/verse-lab/Lentil.git",
+      "lean_toolchain": "leanprover/lean4:v4.20.0",
+      "has_mathlib": false,
+      "build_cmd": "lake build",
+      "license": "Apache-2.0",
+      "license_url": "https://github.com/verse-lab/Lentil/blob/main/LICENSE",
+      "commit": "dbdd02c5f976079a88d9df79f3a8543be7965456",
+      "commit_date": "2025-07-03T12:28:05Z"
+    },
+    "LeroyCompilerVerificationCourse": {
+      "url": "https://github.com/leanprover/LeroyCompilerVerificationCourse.git",
+      "lean_toolchain": "leanprover/lean4:v4.23.0-rc2",
+      "has_mathlib": false,
+      "build_cmd": "lake build",
+      "license": "LGPL-2.1",
+      "license_url": "https://github.com/leanprover/LeroyCompilerVerificationCourse/blob/main/LICENSE",
+      "commit": "a2730e7f9228b9d7ecf4510f1f8652f2cae7ba01",
+      "commit_date": "2025-09-22T19:37:17Z"
+    },
+    "TTBFL": {
+      "url": "https://github.com/ionathanch/TTBFL.git",
+      "lean_toolchain": "leanprover/lean4:v4.13.0",
+      "has_mathlib": true,
+      "build_cmd": "lake build",
+      "license": "zlib",
+      "license_url": "https://github.com/ionathanch/TTBFL/blob/main/LICENSE",
+      "mathlib_rev": "d7317655e2826dc1f1de9a0c138db2775c4bb841",
+      "commit": "4196a4d3a5efac67a79c33cf81266042b1371989",
+      "commit_date": "2025-04-28T13:28:53Z"
+    },
+    "VCV-io": {
+      "url": "https://github.com/Verified-zkEVM/VCV-io.git",
+      "lean_toolchain": "leanprover/lean4:v4.24.0-rc1",
+      "has_mathlib": true,
+      "build_cmd": "lake build",
+      "license": "Apache-2.0",
+      "license_url": "https://github.com/Verified-zkEVM/VCV-io/blob/main/LICENSE",
+      "mathlib_rev": "eed770a434957369c6262aa3fb1d6426419016d4",
+      "commit": "409d778d6a2b90a70335c360af8b336f6e9becc5",
+      "commit_date": "2025-09-23T15:41:44Z"
+    },
+    "capless-lean": {
+      "url": "https://github.com/Linyxus/capless-lean.git",
+      "lean_toolchain": "leanprover/lean4:v4.21.0",
+      "has_mathlib": true,
+      "build_cmd": "lake build",
+      "license": "MIT",
+      "license_url": "https://github.com/Linyxus/capless-lean/blob/main/LICENSE",
+      "mathlib_rev": "308445d7985027f538e281e18df29ca16ede2ba3",
+      "commit": "93ed9e194b57f084e3125ff64cbfdd27cbbd54ad",
+      "commit_date": "2025-06-27T13:40:16Z"
+    },
+    "clean": {
+      "url": "https://github.com/Verified-zkEVM/clean.git",
+      "lean_toolchain": "leanprover/lean4:v4.24.0",
+      "has_mathlib": true,
+      "build_cmd": "lake build",
+      "license": "MIT",
+      "license_url": "https://github.com/Verified-zkEVM/clean/blob/main/LICENSE",
+      "mathlib_rev": "f897ebcf72cd16f89ab4577d0c826cd14afaafc7",
+      "commit": "a134f91ff48ac6d85c9c8d90c64048244cdb6bff",
+      "commit_date": "2025-11-17T09:27:56Z"
+    },
+    "formal-snarks-project": {
+      "url": "https://github.com/BoltonBailey/formal-snarks-project.git",
+      "lean_toolchain": "leanprover/lean4:v4.10.0-rc2",
+      "has_mathlib": true,
+      "build_cmd": "lake build",
+      "license": "MIT",
+      "license_url": "https://github.com/BoltonBailey/formal-snarks-project/blob/main/LICENSE",
+      "mathlib_rev": "36a8397f469658b5650d5548d2fb852619276373",
+      "commit": "dcfc78d456882087d4e592e090e8d6d6df83e560",
+      "commit_date": "2024-07-14T09:59:57Z"
+    },
+    "iris-lean": {
+      "url": "https://github.com/leanprover-community/iris-lean.git",
+      "lean_toolchain": "leanprover/lean4:v4.26.0",
+      "has_mathlib": false,
+      "build_cmd": "lake build",
+      "license": "Apache-2.0",
+      "license_url": "https://github.com/leanprover-community/iris-lean/blob/main/LICENSE",
+      "commit": "36d042d249311727eb87acbef36b9d401bf44450",
+      "commit_date": "2025-10-15T10:50:26Z"
+    },
+    "juvix-lean": {
+      "url": "https://github.com/anoma/juvix-lean.git",
+      "lean_toolchain": "leanprover/lean4:v4.19.0-rc2",
+      "has_mathlib": true,
+      "build_cmd": "lake build",
+      "license": "MIT",
+      "license_url": "https://github.com/anoma/juvix-lean/blob/main/LICENSE",
+      "mathlib_rev": "8fa3d6b6f0186a0c117a08dc3df73df90b3f14ac",
+      "commit": "f202e04219a84ce8f56b2c3fffa3409237c5daea",
+      "commit_date": "2025-07-22T10:52:17Z"
+    },
+    "lean-formal-reasoning-program": {
+      "url": "https://github.com/andaraiwin/lean-formal-reasoning-program.git",
+      "lean_toolchain": "leanprover/lean4:v4.9.0-rc2",
+      "has_mathlib": true,
+      "build_cmd": "lake build",
+      "license": "MIT",
+      "license_url": "https://github.com/andaraiwin/lean-formal-reasoning-program/blob/main/LICENSE",
+      "mathlib_rev": "b83d79b9b7e4cddba1c6c27829a053ecb88e1f08",
+      "commit": "d00c7ea879e51ee664b75d062404bcc901b6936e",
+      "commit_date": "2025-07-25T06:30:13Z"
+    },
+    "lean-hoare": {
+      "url": "https://github.com/goens/lean-hoare.git",
+      "lean_toolchain": "leanprover/lean4:v4.22.0-rc2",
+      "has_mathlib": false,
+      "build_cmd": "lake build",
+      "license": "MIT",
+      "license_url": "https://github.com/goens/lean-hoare/blob/main/LICENSE",
+      "commit": "46f12825c69f397488f198e4dffe4cd9b7820794",
+      "commit_date": "2025-07-23T09:46:40Z"
+    },
+    "lean-mlir": {
+      "url": "https://github.com/opencompl/lean-mlir.git",
+      "lean_toolchain": "leanprover/lean4:nightly-2025-11-30",
+      "has_mathlib": true,
+      "build_cmd": "lake build",
+      "license": "Apache-2.0",
+      "license_url": "https://github.com/opencompl/lean-mlir/blob/main/LICENSE",
+      "mathlib_rev": "3fdd607ea6ff78249b607b72aaea2f92c1152f22",
+      "commit": "72aca6a6692278844744025459ac3eaec2ebd81b",
+      "commit_date": "2025-12-01T11:12:51Z"
+    },
+    "loom": {
+      "url": "https://github.com/verse-lab/loom.git",
+      "lean_toolchain": "leanprover/lean4:v4.23.0",
+      "has_mathlib": true,
+      "build_cmd": "lake build",
+      "license": "Apache-2.0",
+      "license_url": "https://github.com/verse-lab/loom/blob/main/LICENSE",
+      "mathlib_rev": "37df177aaa770670452312393d4e84aaad56e7b6",
+      "commit": "e0f37f6caf9baa706b4562ed0f337c2b0420b018",
+      "commit_date": "2025-11-17T18:25:20Z"
+    },
+    "pcf-lean": {
+      "url": "https://github.com/zeyonaut/pcf-lean.git",
+      "lean_toolchain": "leanprover/lean4:v4.8.0",
+      "has_mathlib": true,
+      "build_cmd": "lake build",
+      "license": "MIT",
+      "license_url": "https://github.com/zeyonaut/pcf-lean/blob/main/LICENSE",
+      "mathlib_rev": "b5eba595428809e96f3ed113bc7ba776c5f801ac",
+      "commit": "3d133f2f5c96bba2df9cb7f70a5270ad3318aaf5",
+      "commit_date": "2024-06-14T20:13:22Z"
+    },
+    "splean": {
+      "url": "https://github.com/verse-lab/splean.git",
+      "lean_toolchain": "leanprover/lean4:v4.11.0",
+      "has_mathlib": true,
+      "build_cmd": "lake build",
+      "license": "Apache-2.0",
+      "license_url": "https://github.com/verse-lab/splean/blob/main/LICENSE",
+      "mathlib_rev": "20c73142afa995ac9c8fb80a9bb585a55ca38308",
+      "commit": "c5530d40affb45272e1d8b411cc1a4120c2c4d84",
+      "commit_date": "2024-12-12T08:38:49Z"
+    },
+    "veil": {
+      "url": "https://github.com/verse-lab/veil.git",
+      "lean_toolchain": "leanprover/lean4:v4.24.0",
+      "has_mathlib": true,
+      "build_cmd": "lake build",
+      "license": "Apache-2.0",
+      "license_url": "https://github.com/verse-lab/veil/blob/main/LICENSE",
+      "mathlib_rev": "f897ebcf72cd16f89ab4577d0c826cd14afaafc7",
+      "commit": "4a17cf16032546db6c429fa3fafefe1863d5132c",
+      "commit_date": "2025-10-22T10:21:37Z"
+    },
+    "verified-compiler": {
+      "url": "https://github.com/marcusrossel/verified-compiler.git",
+      "lean_toolchain": "leanprover/lean4:v4.18.0",
+      "has_mathlib": false,
+      "build_cmd": "lake build",
+      "license": "MIT",
+      "license_url": "https://github.com/marcusrossel/verified-compiler/blob/main/LICENSE",
+      "commit": "4c79694f5b96c6789b307e2911088af6b19540ac",
+      "commit_date": "2025-04-23T16:41:00Z"
+    },
+    "wadray_verification": {
+      "url": "https://github.com/lindy-labs/wadray_verification.git",
+      "lean_toolchain": "leanprover/lean4:v4.9.0-rc2",
+      "has_mathlib": true,
+      "build_cmd": "lake build",
+      "license": "GPL-3.0",
+      "license_url": "https://github.com/lindy-labs/wadray_verification/blob/main/LICENSE",
+      "mathlib_rev": "b142583f50bdaa5ba595320863b81a48a68f8d84",
+      "commit": "2e0d2e5d2397fd3cdfd1ff289674e915d5ed5905",
+      "commit_date": "2024-06-21T16:01:46Z"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+name = "expr_eval"
+version = "0.1.0"
+defaultTargets = ["expr_eval"]
+
+[[lean_lib]]
+name = "ExprEval"
+
+[[lean_exe]]
+name = "expr_eval"
+root = "Main"

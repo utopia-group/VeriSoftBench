@@ -1,0 +1,20 @@
+name = "IntroEffects"
+version = "0.1.0"
+defaultTargets = ["introeffects"]
+
+[[lean_lib]]
+name = "IntroEffects"
+
+[[lean_exe]]
+name = "introeffects"
+root = "Main"
+
+[[require]]
+name = "batteries"
+scope = "leanprover-community"
+rev = "main"
+
+[[require]]
+name = "aesop"
+scope = "leanprover-community"
+rev = "master"

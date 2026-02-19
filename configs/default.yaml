@@ -1,0 +1,48 @@
+# VeriSoftBench Evaluation - Default Configuration
+#
+# Config file values take precedence over CLI arguments.
+# Uncomment and modify values as needed.
+
+# Model configuration
+model_name: openai          # openai, claude, or gemini
+model_id: gpt-4o            # Model identifier
+# api_key: sk-...           # API key (or set via environment variable)
+temperature: 0.7
+max_tokens: 8192
+num_samples: 1              # Number of proof samples per theorem
+
+# Evaluation settings
+fix_enabled: true            # Enable proof fixing step
+mode: filtered_context       # filtered_context, full_context, or full_context_limited
+
+# Data paths (relative to release/ directory)
+# Docker: lean_src_dir is set automatically via VERISOFTBENCH_LEAN_SRC=/workspace/lean_repos
+# Local: set lean_src_dir to the path containing your built Lean repositories
+locator_data_dir: data
+lean_src_dir: data/lean_repos
+prompts_dir: prompts/templates
+output_dir: results/data
+locator_file: verisoftbench.jsonl
+
+# Parallelism
+max_workers: 8               # Parallel workers for evaluation
+max_fix_workers: 4           # Parallel workers for proof fixing
+
+# Rate limiting
+# rate_limit_rpm: 60         # Requests per minute (default: 60)
+
+# Task selection (uncomment to use)
+# task_ids: "1:10"           # Range of task IDs
+# task_ids: "1,5,10,15"     # Specific task IDs
+# category: "Transformation Correctness"
+# subset: 50                 # First N entries only
+
+# Caching
+# refresh_cache: false       # Set true to re-evaluate cached tasks
+
+# Lean compilation backend
+# lean_backend: local        # 'local' (default) or 'docker'
+# docker_container: verisoftbench-lean  # Container name for docker backend
+
+# Debugging
+# save_debug_lean: false     # Save postprocessed Lean files

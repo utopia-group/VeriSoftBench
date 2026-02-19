@@ -1,0 +1,156 @@
+THIRD-PARTY SOFTWARE NOTICES AND INFORMATION
+
+This VeriSoftBench evaluation image includes source code and compiled
+artifacts from the following third-party Lean 4 repositories. Each
+repository is redistributed under its original license. Full license
+texts are available in the /workspace/THIRD_PARTY_LICENSES/ directory
+and at the URLs listed below.
+
+By using this image, you agree to comply with the license terms of all
+included repositories.
+
+================================================================================
+
+Repository: ArkLib
+URL: https://github.com/Verified-zkEVM/ArkLib.git
+Commit: 9a5fd25b17b211e5ac1528a32bab9a8de0883006 (2025-11-15)
+License: Apache-2.0
+License URL: https://github.com/Verified-zkEVM/ArkLib/blob/main/LICENSE
+
+Repository: CvxLean
+URL: https://github.com/verified-optimization/CvxLean.git
+Commit: c62c2f292c6420f31a12e738ebebdfed50f6f840 (2024-05-20)
+License: Apache-2.0
+License URL: https://github.com/verified-optimization/CvxLean/blob/main/LICENSE
+
+Repository: FVIntmax
+URL: https://github.com/NethermindEth/FVIntmax.git
+Commit: d7c4cbc5ec449471952ac5468f3b55bf61f5868e (2025-05-30)
+License: Apache-2.0
+License URL: https://github.com/NethermindEth/FVIntmax/blob/main/LICENSE
+
+Repository: IntroEffects
+URL: https://github.com/ericluap/IntroEffects.git
+Commit: 62aea95b3908214926bdc7d456bec3e39c18ad57 (2025-07-31)
+License: Written-Consent
+Note: Not covered by a standard open-source license. Redistribution
+      authorized via written consent. Contact the author for further use.
+
+Repository: LeanExprEvaluator
+URL: https://github.com/Paul-Passeron/LeanExprEvaluator.git
+Commit: 0aff7447dfb98c318b3f9f8fba4c427d2fa3920c (2025-10-25)
+License: MIT
+License URL: https://github.com/Paul-Passeron/LeanExprEvaluator/blob/main/LICENSE
+
+Repository: Lentil
+URL: https://github.com/verse-lab/Lentil.git
+Commit: dbdd02c5f976079a88d9df79f3a8543be7965456 (2025-07-03)
+License: Apache-2.0
+License URL: https://github.com/verse-lab/Lentil/blob/main/LICENSE
+
+Repository: LeroyCompilerVerificationCourse
+URL: https://github.com/leanprover/LeroyCompilerVerificationCourse.git
+Commit: a2730e7f9228b9d7ecf4510f1f8652f2cae7ba01 (2025-09-22)
+License: LGPL-2.1
+License URL: https://github.com/leanprover/LeroyCompilerVerificationCourse/blob/main/LICENSE
+Note: Source code is included in the image and available at
+      /workspace/lean_repos/LeroyCompilerVerificationCourse/
+
+Repository: TTBFL
+URL: https://github.com/ionathanch/TTBFL.git
+Commit: 4196a4d3a5efac67a79c33cf81266042b1371989 (2025-04-28)
+License: zlib
+License URL: https://github.com/ionathanch/TTBFL/blob/main/LICENSE
+
+Repository: VCV-io
+URL: https://github.com/Verified-zkEVM/VCV-io.git
+Commit: 409d778d6a2b90a70335c360af8b336f6e9becc5 (2025-09-23)
+License: Apache-2.0
+License URL: https://github.com/Verified-zkEVM/VCV-io/blob/main/LICENSE
+
+Repository: capless-lean
+URL: https://github.com/Linyxus/capless-lean.git
+Commit: 93ed9e194b57f084e3125ff64cbfdd27cbbd54ad (2025-06-27)
+License: MIT
+License URL: https://github.com/Linyxus/capless-lean/blob/main/LICENSE
+
+Repository: clean
+URL: https://github.com/Verified-zkEVM/clean.git
+Commit: a134f91ff48ac6d85c9c8d90c64048244cdb6bff (2025-11-17)
+License: MIT
+License URL: https://github.com/Verified-zkEVM/clean/blob/main/LICENSE
+
+Repository: formal-snarks-project
+URL: https://github.com/BoltonBailey/formal-snarks-project.git
+Commit: dcfc78d456882087d4e592e090e8d6d6df83e560 (2024-07-14)
+License: MIT
+License URL: https://github.com/BoltonBailey/formal-snarks-project/blob/main/LICENSE
+
+Repository: iris-lean
+URL: https://github.com/leanprover-community/iris-lean.git
+Commit: 36d042d249311727eb87acbef36b9d401bf44450 (2025-10-15)
+License: Apache-2.0
+License URL: https://github.com/leanprover-community/iris-lean/blob/main/LICENSE
+
+Repository: juvix-lean
+URL: https://github.com/anoma/juvix-lean.git
+Commit: f202e04219a84ce8f56b2c3fffa3409237c5daea (2025-07-22)
+License: MIT
+License URL: https://github.com/anoma/juvix-lean/blob/main/LICENSE
+
+Repository: lean-formal-reasoning-program
+URL: https://github.com/andaraiwin/lean-formal-reasoning-program.git
+Commit: d00c7ea879e51ee664b75d062404bcc901b6936e (2025-07-25)
+License: MIT
+License URL: https://github.com/andaraiwin/lean-formal-reasoning-program/blob/main/LICENSE
+
+Repository: lean-hoare
+URL: https://github.com/goens/lean-hoare.git
+Commit: 46f12825c69f397488f198e4dffe4cd9b7820794 (2025-07-23)
+License: MIT
+License URL: https://github.com/goens/lean-hoare/blob/main/LICENSE
+
+Repository: lean-mlir
+URL: https://github.com/opencompl/lean-mlir.git
+Commit: e0d030d500a7d13a4817b0699c27058c0452c5bd (2025-11-18)
+License: Apache-2.0
+License URL: https://github.com/opencompl/lean-mlir/blob/main/LICENSE
+
+Repository: loom
+URL: https://github.com/verse-lab/loom.git
+Commit: e0f37f6caf9baa706b4562ed0f337c2b0420b018 (2025-11-17)
+License: Apache-2.0
+License URL: https://github.com/verse-lab/loom/blob/main/LICENSE
+
+Repository: pcf-lean
+URL: https://github.com/zeyonaut/pcf-lean.git
+Commit: 3d133f2f5c96bba2df9cb7f70a5270ad3318aaf5 (2024-06-14)
+License: MIT
+License URL: https://github.com/zeyonaut/pcf-lean/blob/main/LICENSE
+
+Repository: splean
+URL: https://github.com/verse-lab/splean.git
+Commit: c5530d40affb45272e1d8b411cc1a4120c2c4d84 (2024-12-12)
+License: Apache-2.0
+License URL: https://github.com/verse-lab/splean/blob/main/LICENSE
+
+Repository: veil
+URL: https://github.com/verse-lab/veil.git
+Commit: 4a17cf16032546db6c429fa3fafefe1863d5132c (2025-10-22)
+License: Apache-2.0
+License URL: https://github.com/verse-lab/veil/blob/main/LICENSE
+
+Repository: verified-compiler
+URL: https://github.com/marcusrossel/verified-compiler.git
+Commit: 4c79694f5b96c6789b307e2911088af6b19540ac (2025-04-23)
+License: MIT
+License URL: https://github.com/marcusrossel/verified-compiler/blob/main/LICENSE
+
+Repository: wadray_verification
+URL: https://github.com/lindy-labs/wadray_verification.git
+Commit: 2e0d2e5d2397fd3cdfd1ff289674e915d5ed5905 (2024-06-21)
+License: GPL-3.0
+License URL: https://github.com/lindy-labs/wadray_verification/blob/main/LICENSE
+Note: Source code is included in the image and available at
+      /workspace/lean_repos/wadray_verification/
+      The GPL-3.0 license applies only to this repository's code.

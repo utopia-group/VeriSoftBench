@@ -1,0 +1,15 @@
+{"version": "1.1.0",
+ "packagesDir": ".lake/packages",
+ "packages":
+ [{"url": "https://github.com/leanprover-community/batteries",
+   "type": "git",
+   "subDir": null,
+   "scope": "",
+   "rev": "6e89c7370ca3a91b7d1f29ef7d727a9d027d7b0d",
+   "name": "batteries",
+   "manifestFile": "lake-manifest.json",
+   "inputRev": "v4.23.0-rc2",
+   "inherited": false,
+   "configFile": "lakefile.toml"}],
+ "name": "LeroyCompilerVerificationCourse",
+ "lakeDir": ".lake"}

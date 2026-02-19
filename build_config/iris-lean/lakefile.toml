@@ -1,0 +1,15 @@
+name = "iris"
+srcDir = "./src/"
+defaultTargets = ["Iris", "IrisTest"]
+
+[[require]]
+name = "Qq"
+scope = "leanprover-community"
+version = "git#stable"
+
+[[lean_lib]]
+name = "Iris"
+
+[[lean_lib]]
+name = "IrisTest"
+globs = ["Iris.*"]

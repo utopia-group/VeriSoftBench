@@ -1,0 +1,20 @@
+# VeriSoftBench Evaluation - OpenAI Example
+#
+# Set your API key via environment variable:
+#   export OPENAI_API_KEY=sk-...
+#
+# Or set it directly in this file:
+#   api_key: sk-...
+
+model_name: openai
+model_id: gpt-4o
+temperature: 0.7
+max_tokens: 8192
+num_samples: 1
+
+fix_enabled: true
+mode: filtered_context
+
+locator_file: verisoftbench.jsonl
+max_workers: 8
+max_fix_workers: 4

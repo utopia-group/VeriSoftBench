@@ -1,0 +1,12 @@
+.DS_Store
+__pycache__/
+*.pyc
+results/
+debug/
+data/.cache/
+data/lean_repos/
+
+# Release engineering scripts (outputs already committed)
+scripts/generate_repos_manifest.py
+scripts/generate_third_party_notices.py
+scripts/resolve_repo_commits.py
