@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VeriSoftBench</title>
+  <meta name="description" content="VeriSoftBench: 500 theorem-proving tasks from 23 real-world Lean 4 software verification repositories.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ── Header ─────────────────────────────────────────────────── -->
+<header class="site-header">
+  <div class="wrap">
+    <div class="header-top">
+      <img src="VeriSoftBench%20Logo.png" alt="VeriSoftBench" class="site-logo">
+      <div class="header-text">
+        <h1>VeriSoftBench</h1>
+        <p class="subtitle">Benchmarking LLMs on Real-World Software Verification in Lean&nbsp;4</p>
+        <p class="desc">500 theorem-proving tasks from 23 real-world projects, spanning compilers, type systems, smart contracts, separation logic, and program semantics.</p>
+      </div>
+    </div>
+    <p class="authors">
+      Yutong Xin<sup>*1</sup> &nbsp;
+      Jocelyn Qiaochu Chen<sup>*2</sup> &nbsp;
+      Greg Durrett<sup>2</sup> &nbsp;
+      I&#351;il Dillig<sup>1</sup>
+    </p>
+    <p class="affiliations">
+      <sup>1</sup>The University of Texas at Austin &nbsp; <sup>2</sup>New York University &nbsp; <sup>*</sup>Equal contribution
+    </p>
+    <div class="header-links">
+      <a href="https://arxiv.org/abs/TODO" target="_blank">Paper</a>
+      <a href="https://github.com/utopia-group/VeriSoftBench" target="_blank">Dataset</a>
+      <a href="#results">Model Comparison</a>
+      <a href="#details">Details</a>
+      <a href="#citation">Citation</a>
+    </div>
+  </div>
+</header>
+
+<!-- ── Intro ───────────────────────────────────────────────────── -->
+<div class="section section-intro">
+  <div class="wrap">
+    <p>
+      Software verification proofs are uniquely challenging: they require reasoning over
+      deep chains of project-specific definitions, large library APIs, and
+      the domain semantics of the code being verified.
+    </p>
+    <p>
+      VeriSoftBench provides <strong>500 theorem-proving tasks</strong>
+      from <strong>23 real-world Lean&nbsp;4 repositories</strong>, each with its full dependency context
+      organized into four layers (library, project, local, theorem).
+      The best model solves 41% of tasks with curated context&mdash;and only 35% given the raw repository,
+      showing that real-world verification remains a major open challenge.
+    </p>
+  </div>
+</div>
+
+<!-- ── Model Comparison ────────────────────────────────────────────── -->
+<div class="section" id="results">
+  <div class="wrap">
+    <h2>Model Comparison</h2>
+    <p>
+      Model performance measured by <strong>Pass@8</strong> (8 proof attempts per task).
+      <strong>Curated context</strong>: dependency-traced definitions and lemmas.
+      <strong>Full repo context</strong>: entire source file.
+      <em>r</em>&thinsp;=&thinsp;repair attempts with Lean error feedback (0&thinsp;=&thinsp;none).
+    </p>
+
+    <h3 style="font-size:0.9rem;margin-top:24px;margin-bottom:8px">VeriSoftBench-Full <span style="font-weight:400;color:var(--text-3)">(500 tasks)</span></h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th>Curated Context</th>
+            <th>Full Repo Context</th>
+          </tr>
+        </thead>
+        <tbody id="results-full">
+          <tr><td colspan="3" style="text-align:center;color:var(--text-3);padding:20px">Loading&hellip;</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="font-size:0.9rem;margin-top:24px;margin-bottom:8px">VeriSoftBench-Aristotle <span style="font-weight:400;color:var(--text-3)">(100 tasks)</span></h3>
+    <p style="margin-bottom:8px">
+      100 tasks compatible with
+      <a href="https://aristotle.harmonic.fun/" target="_blank">Aristotle</a>,
+      enabling direct comparison between LLM generation and search-based proving.
+    </p>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th>Curated Context</th>
+            <th>Full Repo Context</th>
+          </tr>
+        </thead>
+        <tbody id="results-aristotle">
+          <tr><td colspan="3" style="text-align:center;color:var(--text-3);padding:20px">Loading&hellip;</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="note">
+      <a href="https://arxiv.org/abs/2508.03613" target="_blank">G&ouml;del-Prover-v2</a> was evaluated on 496 tasks (curated) and 44 tasks (full repo) due to context window limitations.
+      For VeriSoftBench-Aristotle, both models are evaluated on a variation of the full repo context configuration.
+    </p>
+    <p class="note" id="last-updated"></p>
+  </div>
+</div>
+
+<!-- ── Tabbed Details Section ─────────────────────────────────── -->
+<div class="section" id="details">
+  <div class="wrap">
+    <div class="tabs">
+      <button class="tab active" data-tab="about">About</button>
+      <button class="tab" data-tab="context">Context &amp; Domains</button>
+      <button class="tab" data-tab="samples">Sample Tasks</button>
+    </div>
+
+    <!-- Tab: About -->
+    <div class="tab-panel active" id="tab-about">
+      <h2>Why software verification proofs?</h2>
+      <p>
+        Existing LLM proof benchmarks focus on competition mathematics or textbook exercises.
+        Real software verification is structurally different: proofs depend on
+        <span class="num">deep chains of project-specific definitions</span>,
+        interact with large library APIs (Mathlib, Std4), and require understanding
+        the <span class="num">domain semantics</span> of the code being verified&mdash;whether that&rsquo;s
+        a compiler IR, a type system, or a smart contract invariant.
+      </p>
+      <p>
+        VeriSoftBench captures this structure. Each task comes with its full dependency context,
+        organized into layers that reflect how real projects are built.
+      </p>
+
+      <!-- Figure 1: dependency comparison -->
+      <figure class="fig">
+        <img src="fig1_dependency_comparison.png" alt="Contextual dependencies comparison between mathematical benchmarks, lightweight verification, and repository-scale verification">
+        <figcaption>
+          Contextual dependencies comparison between (a)&nbsp;mathematical benchmark proofs,
+          (b)&nbsp;lightweight verification tasks, and (c)&nbsp;repository-scale verification.
+          Purple denotes library dependencies; yellow denotes local/repository dependencies.
+        </figcaption>
+      </figure>
+
+      <!-- Table 1: benchmark comparison -->
+      <div class="tbl-wrap" style="margin-top:24px">
+        <table>
+          <thead>
+            <tr>
+              <th>Proof domain</th>
+              <th>Benchmark</th>
+              <th>Language</th>
+              <th style="text-align:center">Project defs</th>
+              <th style="text-align:center">Multi-module ctx</th>
+              <th style="text-align:center">Repo-level retrieval</th>
+              <th style="text-align:center">Ground-truth proofs</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td rowspan="4">Mathematics</td>
+              <td>MiniF2F</td><td>Lean</td>
+              <td style="text-align:center" class="chk-no">&cross;</td>
+              <td style="text-align:center" class="chk-no">&cross;</td>
+              <td style="text-align:center" class="chk-no">&cross;</td>
+              <td style="text-align:center" class="chk-no">&cross;</td>
+            </tr>
+            <tr>
+              <td>ProofNet</td><td>Lean</td>
+              <td style="text-align:center" class="chk-no">&cross;</td>
+              <td style="text-align:center" class="chk-no">&cross;</td>
+              <td style="text-align:center" class="chk-no">&cross;</td>
+              <td style="text-align:center" class="chk-no">&cross;</td>
+            </tr>
+            <tr>
+              <td>LeanDojo</td><td>Lean</td>
+              <td style="text-align:center" class="chk-yes">&check;</td>
+              <td style="text-align:center" class="chk-yes">&check;</td>
+              <td style="text-align:center" class="chk-yes">&check;</td>
+              <td style="text-align:center" class="chk-yes">&check;</td>
+            </tr>
+            <tr>
+              <td>PutnamBench</td><td>Multiple</td>
+              <td style="text-align:center" class="chk-no">&cross;</td>
+              <td style="text-align:center" class="chk-no">&cross;</td>
+              <td style="text-align:center" class="chk-no">&cross;</td>
+              <td style="text-align:center" class="chk-no">&cross;</td>
+            </tr>
+            <tr><td colspan="7" style="padding:0;border-bottom:2px solid var(--border)"></td></tr>
+            <tr>
+              <td rowspan="3">Formally Verified Code Generation</td>
+              <td>FVAPPS</td><td>Lean</td>
+              <td style="text-align:center" class="chk-no">&cross;</td>
+              <td style="text-align:center" class="chk-no">&cross;</td>
+              <td style="text-align:center" class="chk-no">&cross;</td>
+              <td style="text-align:center" class="chk-no">&cross;</td>
+            </tr>
+            <tr>
+              <td>CLEVER</td><td>Lean</td>
+              <td style="text-align:center" class="chk-no">&cross;</td>
+              <td style="text-align:center" class="chk-no">&cross;</td>
+              <td style="text-align:center" class="chk-no">&cross;</td>
+              <td style="text-align:center" class="chk-no">&cross;</td>
+            </tr>
+            <tr>
+              <td>Verina</td><td>Lean</td>
+              <td style="text-align:center" class="chk-yes">&check;</td>
+              <td style="text-align:center" class="chk-no">&cross;</td>
+              <td style="text-align:center" class="chk-no">&cross;</td>
+              <td style="text-align:center" class="chk-half">&#9681;</td>
+            </tr>
+            <tr><td colspan="7" style="padding:0;border-bottom:2px solid var(--border)"></td></tr>
+            <tr>
+              <td>Verification</td>
+              <td>MiniCodeProps</td><td>Lean</td>
+              <td style="text-align:center" class="chk-yes">&check;</td>
+              <td style="text-align:center" class="chk-no">&cross;</td>
+              <td style="text-align:center" class="chk-no">&cross;</td>
+              <td style="text-align:center" class="chk-no">&cross;</td>
+            </tr>
+            <tr><td colspan="7" style="padding:0;border-bottom:2px solid var(--border)"></td></tr>
+            <tr style="font-weight:600">
+              <td>PL Theory &amp; Verification</td>
+              <td>VeriSoftBench (Ours)</td><td>Lean</td>
+              <td style="text-align:center" class="chk-yes">&check;</td>
+              <td style="text-align:center" class="chk-yes">&check;</td>
+              <td style="text-align:center" class="chk-yes">&check;</td>
+              <td style="text-align:center" class="chk-yes">&check;</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:0.82rem;color:var(--text-3);margin-top:8px">
+        While LeanDojo satisfies the listed criteria, its scope is confined to the singular environment of Mathlib.
+        VeriSoftBench features 23 diverse repositories with bespoke contexts.
+      </p>
+    </div>
+
+    <!-- Tab: Context & Domains -->
+    <div class="tab-panel" id="tab-context">
+      <h2>Structured dependency context</h2>
+      <p>
+        Every task provides the theorem&rsquo;s dependencies at four levels of scope.
+        This is what distinguishes real verification proofs from isolated math problems:
+        a single theorem may draw on library types, project-wide invariants, and
+        locally-scoped helpers, all of which a model must reason over.
+      </p>
+
+      <div class="ctx-layers">
+        <div class="ctx-layer">
+          <div class="ctx-label">Library</div>
+          <div class="ctx-detail">
+            Definitions and lemmas from Lean&rsquo;s standard library and Mathlib, referenced by name and source module.
+            <br>Avg. <code>15.8</code> defs + <code>11.8</code> lemmas per task.
+          </div>
+        </div>
+        <div class="ctx-layer">
+          <div class="ctx-label">Project</div>
+          <div class="ctx-detail">
+            Definitions and lemmas from elsewhere in the same repository, provided with full source.
+            All 500 tasks have project-level dependencies.
+            <br>Avg. <code>33.7</code> defs + <code>7.8</code> lemmas per task.
+          </div>
+        </div>
+        <div class="ctx-layer">
+          <div class="ctx-label">Local</div>
+          <div class="ctx-detail">
+            Definitions and lemmas from the same file, plus the surrounding file context (namespace, variables, opens).
+            <br>Avg. <code>5.6</code> defs + <code>5.4</code> lemmas; <code>1,673</code> chars of context.
+          </div>
+        </div>
+        <div class="ctx-layer">
+          <div class="ctx-label">Theorem</div>
+          <div class="ctx-detail">
+            The target theorem statement to prove, with its full signature and type.
+          </div>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat">
+          <div class="stat-n">68</div>
+          <div class="stat-l">avg. transitive deps</div>
+        </div>
+        <div class="stat">
+          <div class="stat-n">480</div>
+          <div class="stat-l">max transitive deps</div>
+        </div>
+        <div class="stat">
+          <div class="stat-n">5.4</div>
+          <div class="stat-l">avg. imports per task</div>
+        </div>
+      </div>
+
+      <h2 style="margin-top:32px">Domains</h2>
+      <p>Tasks are drawn from five verification domains, covering the breadth of how Lean&nbsp;4 is used in practice for software correctness.</p>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Domain</th><th>Tasks</th><th>Examples</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><span class="dot dot-applied"></span>Applied Verification</td>
+              <td>195 <span class="pct-bar" style="width:78px;background:#16a34a"></span></td>
+              <td style="color:var(--text-2);font-size:0.82rem">Smart contracts, crypto protocols, numerical libraries</td>
+            </tr>
+            <tr>
+              <td><span class="dot dot-compiler"></span>Compiler</td>
+              <td>84 <span class="pct-bar" style="width:34px;background:#d97706"></span></td>
+              <td style="color:var(--text-2);font-size:0.82rem">IR transformations, optimization passes, correctness</td>
+            </tr>
+            <tr>
+              <td><span class="dot dot-types"></span>Type Systems</td>
+              <td>82 <span class="pct-bar" style="width:33px;background:#7c3aed"></span></td>
+              <td style="color:var(--text-2);font-size:0.82rem">Type soundness, capability systems, metatheory</td>
+            </tr>
+            <tr>
+              <td><span class="dot dot-framework"></span>Frameworks</td>
+              <td>79 <span class="pct-bar" style="width:32px;background:#2563eb"></span></td>
+              <td style="color:var(--text-2);font-size:0.82rem">Separation logic (Iris), verification libraries</td>
+            </tr>
+            <tr>
+              <td><span class="dot dot-semantics"></span>Semantics</td>
+              <td>60 <span class="pct-bar" style="width:24px;background:#db2777"></span></td>
+              <td style="color:var(--text-2);font-size:0.82rem">Operational semantics, program logics, Hoare logic</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab: Sample Tasks -->
+    <div class="tab-panel" id="tab-samples">
+      <h2>Sample tasks</h2>
+      <p>Each task includes the theorem, its structured dependencies, and a ground-truth proof from the original repo.</p>
+
+      <!-- Figure 3: example task instance -->
+      <figure class="fig">
+        <img src="fig3_example_task.png" alt="An example task instance showing the target theorem statement, local file context, and repository dependencies">
+        <figcaption>
+          An example task from VeriSoftBench. The goal is to prove <code>cexec_to_reds</code>,
+          which relates two definitions of program execution. Color annotations trace dependencies
+          from the theorem to its relevant context across local file context and repository dependencies.
+        </figcaption>
+      </figure>
+
+      <!-- Task 1 -->
+      <div class="task">
+        <div class="task-top">
+          <span class="name">Vec.le_div_iff</span>
+          <span class="tag">Applied Verif.</span>
+          <span class="repo">CvxLean</span>
+        </div>
+        <div class="task-fields">
+          <div class="task-field">
+            <dt>Statement</dt>
+            <dd>lemma le_div_iff (hc : StrongLT 0 c) : a &le; b / c &harr; a * c &le; b</dd>
+          </div>
+          <div class="task-field">
+            <dt>Imports</dt>
+            <dd>CvxLean.Lib.Math.Data.Real, Mathlib.Analysis.NormedSpace.PiLp, <span class="dim">+2 more</span></dd>
+          </div>
+          <div class="task-field">
+            <dt>Lib defs</dt>
+            <dd>StrongLT <span class="dim">(Mathlib.Order.Basic)</span></dd>
+          </div>
+          <div class="task-field">
+            <dt>Repo defs</dt>
+            <dd><span class="dim">1 definition from project</span></dd>
+          </div>
+          <div class="task-field">
+            <dt>Depth / Deps</dt>
+            <dd>nesting 1 &middot; 1 transitive dep</dd>
+          </div>
+          <div class="task-field">
+            <dt>Proof</dt>
+            <dd>by constructor
+  &middot; intro h i; have hi := h i; simp at hi;
+    rw [_root_.le_div_iff (hc i)] at hi; exact hi
+  &middot; intro h i; have hi := h i; simp at hi;
+    dsimp; rw [_root_.le_div_iff (hc i)]; exact hi</dd>
+          </div>
+        </div>
+      </div>
+
+      <!-- Task 2 -->
+      <div class="task">
+        <div class="task-top">
+          <span class="name">Iris.BI.plainly_sep_dup</span>
+          <span class="tag">Framework</span>
+          <span class="repo">iris-lean</span>
+        </div>
+        <div class="task-fields">
+          <div class="task-field">
+            <dt>Statement</dt>
+            <dd>theorem plainly_sep_dup : &#9632; P &#8867;&#8866; &#9632; P &#8727; &#9632; P</dd>
+          </div>
+          <div class="task-field">
+            <dt>Imports</dt>
+            <dd>Iris.BI.Interface, Iris.BI.DerivedLaws, <span class="dim">+1 more</span></dd>
+          </div>
+          <div class="task-field">
+            <dt>Lib defs</dt>
+            <dd><span class="dim">references to Std4 and Lean core</span></dd>
+          </div>
+          <div class="task-field">
+            <dt>Repo defs</dt>
+            <dd>BIBase, plainly, sep, wand, <span class="dim">+8 more</span></dd>
+          </div>
+          <div class="task-field">
+            <dt>Depth / Deps</dt>
+            <dd>nesting 3 &middot; 14 transitive deps</dd>
+          </div>
+          <div class="task-field">
+            <dt>Proof</dt>
+            <dd>apply anti_symm &lt;;&gt; [plainly_absorb, and_self &gt;&gt;&gt; plainly_and_sep_assoc]</dd>
+          </div>
+        </div>
+      </div>
+
+      <!-- Task 3 -->
+      <div class="task">
+        <div class="task-top">
+          <span class="name">SType.trename_trename</span>
+          <span class="tag">Type Systems</span>
+          <span class="repo">capless-lean</span>
+        </div>
+        <div class="task-fields">
+          <div class="task-field">
+            <dt>Statement</dt>
+            <dd>theorem trename_trename (S : SType n m k) :
+  S.trename f |>.trename g = S.trename (g &compfn; f)</dd>
+          </div>
+          <div class="task-field">
+            <dt>Imports</dt>
+            <dd>Capless.Type, Capless.Renaming, <span class="dim">+1 more</span></dd>
+          </div>
+          <div class="task-field">
+            <dt>Repo defs</dt>
+            <dd>SType, CType, EType, CaptureSet, trename, <span class="dim">+11 more (16 total)</span></dd>
+          </div>
+          <div class="task-field">
+            <dt>Local lemmas</dt>
+            <dd>2 lemmas from the same file</dd>
+          </div>
+          <div class="task-field">
+            <dt>Depth / Deps</dt>
+            <dd>nesting 4 &middot; 15 transitive deps</dd>
+          </div>
+          <div class="task-field">
+            <dt>Proof</dt>
+            <dd><span class="dim">726 chars &mdash; mutual induction on the type structure</span></dd>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Citation ───────────────────────────────────────────────── -->
+<div class="section" id="citation">
+  <div class="wrap">
+    <h2>Citation</h2>
+    <div class="cite-block">
+<pre id="bibtex"><code>@article{verisoftbench2025,
+  title     = {VeriSoftBench: A Benchmark for Software Verification in Lean 4},
+  author    = {TODO},
+  journal   = {TODO},
+  year      = {2025},
+  url       = {https://arxiv.org/abs/TODO}
+}</code></pre>
+      <button class="copy-btn" onclick="copyBibtex()">Copy</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Footer ─────────────────────────────────────────────────── -->
+<footer>
+  <div class="wrap">
+    <p>Code: MIT &middot; Data: CC-BY-4.0</p>
+    <p><a href="https://github.com/utopia-group/VeriSoftBench">GitHub</a> &middot; <a href="https://arxiv.org/abs/TODO">Paper</a></p>
+  </div>
+</footer>
+
+<script>
+// Tab switching
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// Results loading
+async function loadResults() {
+  try {
+    const resp = await fetch('results.json');
+    const data = await resp.json();
+    const note = document.getElementById('last-updated');
+
+    function renderRows(rows, tbodyId) {
+      const tbody = document.getElementById(tbodyId);
+      if (!rows || !rows.length) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text-3);padding:20px">No results yet.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = rows.map(r => {
+        const name = r.url ? '<a href="' + r.url + '" target="_blank">' + r.model + '</a>' : r.model;
+        const label = r.setting ? name + ' <span style="color:var(--text-3);font-weight:400;font-size:0.82rem">(' + r.setting + ')</span>' : '<strong>' + name + '</strong>';
+        return '<tr><td>' + label + '</td>' +
+          '<td class="mono">' + r.curated + '</td>' +
+          '<td class="mono">' + r.full_repo + '</td></tr>';
+      }).join('');
+    }
+
+    renderRows(data.full, 'results-full');
+    renderRows(data.aristotle, 'results-aristotle');
+    if (data.last_updated) note.textContent = 'Last updated: ' + data.last_updated;
+  } catch (e) {
+    document.getElementById('results-full').innerHTML =
+      '<tr><td colspan="3" style="text-align:center;color:var(--text-3);padding:20px">Could not load results.</td></tr>';
+  }
+}
+function copyBibtex() {
+  navigator.clipboard.writeText(document.getElementById('bibtex').textContent).then(() => {
+    const b = document.querySelector('.copy-btn');
+    b.textContent = 'Copied!';
+    setTimeout(() => b.textContent = 'Copy', 1500);
+  });
+}
+loadResults();
+</script>
+
+</body>
+</html>

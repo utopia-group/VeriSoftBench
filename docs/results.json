@@ -1,0 +1,13 @@
+{
+  "last_updated": "2026-02-19",
+  "full": [
+    {"model": "Gemini-3-Pro", "setting": "Pass@8, r=3", "curated": "41.0%", "full_repo": "34.8%"},
+    {"model": "Claude Opus 4.5", "setting": "Pass@8, r=3", "curated": "31.2%", "full_repo": "23.2%"},
+    {"model": "GPT-5.2", "setting": "Pass@8, r=3", "curated": "12.6%", "full_repo": "10.8%"},
+    {"model": "Gödel-Prover-v2", "url": "https://arxiv.org/abs/2508.03613", "setting": "Pass@8, r=0", "curated": "5.6%", "full_repo": "0.0%"}
+  ],
+  "aristotle": [
+    {"model": "Aristotle", "url": "https://aristotle.harmonic.fun/", "setting": "", "curated": "—", "full_repo": "69%"},
+    {"model": "Gemini-3-Pro", "setting": "Pass@8, r=3", "curated": "—", "full_repo": "65%"}
+  ]
+}
