@@ -104,6 +104,11 @@ class BenchmarkEvaluator:
         self.mode = model_config.get("mode", "filtered_context")
         self.debug_output_dir = debug_output_dir
 
+        # Custom prompt/parsing mode (e.g., "goedel" for Goedel-Code-Prover)
+        self.prompt_mode = model_config.get("prompt_mode", "default")
+        self.custom_system_prompt = model_config.get("system_prompt")
+        self.custom_user_prompt_format = model_config.get("user_prompt_format")
+
         # Setup logger for this module
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.INFO)
@@ -242,6 +247,55 @@ class BenchmarkEvaluator:
                 verif_ctx, flags=re.DOTALL)
 
         return verif_ctx
+
+    def _build_goedel_user_prompt(self, theorem_entry: Dict[str, Any]) -> str:
+        """Build a Goedel-style 'Formal Problem:' user prompt.
+
+        Includes VeriSoftBench's filtered context so the model can reference
+        project-specific symbols, followed by the theorem with ``by sorry``.
+        """
+        # Build context sections from the theorem entry
+        parts = []
+
+        # Local context (imports, namespaces, defs before the theorem)
+        local_ctx = theorem_entry.get("local_ctx", "")
+        if local_ctx and local_ctx.strip():
+            parts.append(local_ctx.strip())
+
+        # Library definitions used
+        lib_defs = theorem_entry.get("used_lib_defs", [])
+        if lib_defs:
+            defs_lines = []
+            for item in lib_defs:
+                name = item.get("name", "")
+                module = item.get("module", "")
+                if module:
+                    defs_lines.append(f"-- {name} from {module}")
+                elif name:
+                    defs_lines.append(f"-- {name}")
+            if defs_lines:
+                parts.append("-- Available library definitions:\n" + "\n".join(defs_lines))
+
+        # Repository definitions
+        repo_defs = theorem_entry.get("used_repo_defs", [])
+        if repo_defs:
+            repo_parts = [item.get("content", "") for item in repo_defs if item.get("content", "").strip()]
+            if repo_parts:
+                parts.append("-- Repository definitions:\n" + "\n\n".join(repo_parts))
+
+        # Target theorem with sorry
+        thm_stmt = theorem_entry.get("thm_stmt", "")
+        # Ensure it ends with := by sorry for Goedel's expected input format
+        thm_with_sorry = thm_stmt.rstrip()
+        if thm_with_sorry.endswith(":="):
+            thm_with_sorry += " by sorry"
+        elif not thm_with_sorry.endswith("sorry"):
+            thm_with_sorry += " := by sorry"
+
+        parts.append(thm_with_sorry)
+
+        context_and_theorem = "\n\n".join(parts)
+        return f"Formal Problem:\n{context_and_theorem}"
 
     def _save_result_now(self, result: Dict[str, Any]) -> None:
         """Save a result immediately to disk (for real-time incremental saving)."""
@@ -523,11 +577,16 @@ class BenchmarkEvaluator:
             # Step 2: Retrieve relevant lemmas (if enabled)
             # Step 3: Build prompt
             self.logger.info("Building prompt")
-            sys_prompt = self.prompt_builder.retrive_sys_prompt()
-            user_prompt = self.prompt_builder.build_user_prompt(
-                theorem_entry=theorem_entry,
-                mode = self.mode
-            )
+            if self.prompt_mode == "goedel":
+                sys_prompt = self.custom_system_prompt or self.prompt_builder.retrive_sys_prompt()
+                # Build the "Formal Problem:" user prompt with context
+                user_prompt = self._build_goedel_user_prompt(theorem_entry)
+            else:
+                sys_prompt = self.prompt_builder.retrive_sys_prompt()
+                user_prompt = self.prompt_builder.build_user_prompt(
+                    theorem_entry=theorem_entry,
+                    mode=self.mode,
+                )
 
             # Step 4: Generate proof using neural prover
             self.logger.info("Generating proof with neural prover")
@@ -542,9 +601,14 @@ class BenchmarkEvaluator:
             # Helper function to verify a single proof
             def verify_single_proof(proof_output, proof_id):
                 # need to record the error message for each proof attempt
-                lemmas = utils.get_lemmas_from_llm_output(proof_output)
-                reasoning = utils.get_reasoning_from_llm_output(proof_output)
-                proof = utils.get_proof_from_llm_output(proof_output)
+                if self.prompt_mode == "goedel":
+                    lemmas = utils.get_goedel_lemmas_from_output(proof_output, thm_name)
+                    proof = utils.get_goedel_proof_from_output(proof_output, thm_name)
+                    reasoning = ""  # Goedel doesn't use <reasoning> tags
+                else:
+                    lemmas = utils.get_lemmas_from_llm_output(proof_output)
+                    reasoning = utils.get_reasoning_from_llm_output(proof_output)
+                    proof = utils.get_proof_from_llm_output(proof_output)
                 if "verina" in str(lean_root) and lemmas.strip():
                     # replace all "lemma " with "theorem "
                     lemmas = re.sub(r'lemma\b', 'theorem', lemmas)

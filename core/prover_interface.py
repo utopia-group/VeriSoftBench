@@ -79,12 +79,22 @@ class ProverInterface:
             rate_limit_rpm = 60
         self.rate_limiter = RateLimiter(requests_per_minute=rate_limit_rpm)
 
+        # Store base_url for vLLM / OpenAI-compatible servers
+        self.base_url = model_config.get("base_url")
+
         # Initialize API clients based on model_name
         if self.model_name == "openai":
             self.api_key = self.api_key or os.environ.get("OPENAI_API_KEY")
-            if not self.api_key:
+            if not self.api_key and not self.base_url:
                 raise ValueError("OpenAI API key is not set; provide api_key in config or set OPENAI_API_KEY")
-            self.client = openai.OpenAI(api_key=self.api_key, timeout=3600)
+            # For vLLM / local servers, use a dummy key if none provided
+            if not self.api_key:
+                self.api_key = "dummy"
+            self.client = openai.OpenAI(
+                api_key=self.api_key,
+                base_url=self.base_url,
+                timeout=3600,
+            )
         elif self.model_name == "claude":
             self.api_key = self.api_key or os.environ.get("ANTHROPIC_API_KEY")
             if not self.api_key:
@@ -376,6 +386,9 @@ class ProverInterface:
         # Compute how many batches needed
         batches = (num_samples + max_per_call - 1) // max_per_call
 
+        temperature = kwargs.get("temperature", 1.0)
+        max_tokens = kwargs.get("max_tokens", 8192)
+
         # Helper function to make a single API call
         def make_api_call(batch_size):
             # Apply rate limiting before making the API call
@@ -388,6 +401,8 @@ class ProverInterface:
                     {"role": "user", "content": user_prompt}
                 ],
                 n=batch_size,
+                temperature=temperature,
+                max_tokens=max_tokens,
             )
 
             # Return results from this batch

@@ -68,7 +68,11 @@ def merge_config_with_args(config: Dict[str, Any], args: argparse.Namespace) -> 
         'refresh_cache': 'refresh_cache',
         'save_debug_lean': 'save_debug_lean',
         'lean_backend': 'lean_backend',
-        'docker_container': 'docker_container'
+        'docker_container': 'docker_container',
+        'base_url': 'base_url',
+        'prompt_mode': 'prompt_mode',
+        'system_prompt': 'system_prompt',
+        'user_prompt_format': 'user_prompt_format',
     }
 
     for config_key, arg_key in config_to_arg_map.items():
@@ -320,6 +324,18 @@ def create_model_config(args) -> Dict[str, Any]:
 
     if args.api_key:
         config["api_key"] = args.api_key
+
+    # vLLM / OpenAI-compatible server support
+    if getattr(args, "base_url", None):
+        config["base_url"] = args.base_url
+
+    # Custom prompt/parsing mode (e.g., "goedel")
+    if getattr(args, "prompt_mode", None):
+        config["prompt_mode"] = args.prompt_mode
+    if getattr(args, "system_prompt", None):
+        config["system_prompt"] = args.system_prompt
+    if getattr(args, "user_prompt_format", None):
+        config["user_prompt_format"] = args.user_prompt_format
 
     return config
 

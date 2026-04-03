@@ -301,6 +301,97 @@ def get_fixed_proof_from_llm_output(output: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Goedel-style output parsing (```lean code blocks)
+# ---------------------------------------------------------------------------
+
+def _extract_lean_codeblocks(output: str) -> str:
+    """Extract code from ```lean or ```lean4 code blocks in LLM output."""
+    pattern = r'```lean4?\s*\n(.*?)```'
+    matches = re.findall(pattern, output, re.DOTALL)
+    if matches:
+        return "\n\n".join(m.strip() for m in matches)
+    return ""
+
+
+def _split_lemmas_and_proof(code: str, thm_name: str = "") -> tuple:
+    """Split extracted Lean code into (auxiliary_lemmas, proof_body).
+
+    The main theorem is identified by matching ``thm_name`` or by being the
+    last ``theorem`` declaration in the code.  Everything else that is a
+    ``lemma`` or ``theorem`` declaration before it is treated as auxiliary.
+    The proof body is extracted from the main theorem (everything after the
+    ``:= by`` or ``:=`` separator).
+    """
+    if not code.strip():
+        return "", ""
+
+    # Split into top-level declarations
+    # Each declaration starts with lemma/theorem/def at column 0
+    decl_pattern = re.compile(
+        r'^((?:private\s+|protected\s+|noncomputable\s+)*(?:theorem|lemma)\b.*?)(?=\n(?:(?:private\s+|protected\s+|noncomputable\s+)*(?:theorem|lemma|def|abbrev|instance|structure|inductive|class)\b)|\Z)',
+        re.MULTILINE | re.DOTALL,
+    )
+    decls = decl_pattern.findall(code)
+
+    if not decls:
+        # No declarations found — treat entire code as proof body
+        return "", code.strip()
+
+    # Find the main theorem
+    main_idx = len(decls) - 1  # default: last declaration
+    if thm_name:
+        # Try to match by name (last component or full name)
+        name_parts = thm_name.split(".")
+        short_name = name_parts[-1]
+        for i, d in enumerate(decls):
+            # Match "theorem <name>" allowing for namespace prefixes
+            if re.search(r'\b(?:theorem|lemma)\s+(?:\S+\.)*' + re.escape(short_name) + r'\b', d):
+                main_idx = i
+
+    main_decl = decls[main_idx]
+    aux_decls = [d for i, d in enumerate(decls) if i != main_idx]
+
+    # Extract proof body from main theorem
+    proof_body = ""
+    # Look for ":= by" pattern
+    by_match = re.search(r':=\s*(by\b.*)', main_decl, re.DOTALL)
+    if by_match:
+        proof_body = by_match.group(1).rstrip()
+    else:
+        # Look for ":= " (term-mode proof)
+        assign_match = re.search(r':=\s*(.*)', main_decl, re.DOTALL)
+        if assign_match:
+            proof_body = assign_match.group(1).rstrip()
+        else:
+            # Look for "where" proof
+            where_match = re.search(r'(\bwhere\b.*)', main_decl, re.DOTALL)
+            if where_match:
+                proof_body = where_match.group(1).rstrip()
+
+    aux_lemmas = "\n\n".join(d.strip() for d in aux_decls)
+
+    return aux_lemmas, proof_body
+
+
+def get_goedel_lemmas_from_output(output: str, thm_name: str = "") -> str:
+    """Extract auxiliary lemmas from Goedel-style ```lean code block output."""
+    code = _extract_lean_codeblocks(output)
+    if not code:
+        return ""
+    lemmas, _ = _split_lemmas_and_proof(code, thm_name)
+    return lemmas
+
+
+def get_goedel_proof_from_output(output: str, thm_name: str = "") -> str:
+    """Extract proof body from Goedel-style ```lean code block output."""
+    code = _extract_lean_codeblocks(output)
+    if not code:
+        return ""
+    _, proof = _split_lemmas_and_proof(code, thm_name)
+    return proof
+
+
+# ---------------------------------------------------------------------------
 # Lean assembly helpers
 # ---------------------------------------------------------------------------
 

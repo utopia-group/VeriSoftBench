@@ -1,0 +1,58 @@
+# VeriSoftBench Evaluation — Goedel-Code-Prover-8B
+#
+# Requires a vLLM server running the model:
+#   vllm serve Goedel-LM/Goedel-Code-Prover-8B --port 8000
+#
+# Then run:
+#   python evaluate.py --config configs/goedel_8b.yaml
+
+# Model configuration — uses OpenAI-compatible API via vLLM
+model_name: openai
+model_id: Goedel-LM/Goedel-Code-Prover-8B
+base_url: "http://localhost:8000/v1"
+temperature: 0.9
+max_tokens: 16384
+num_samples: 1
+
+# Goedel-specific prompt and parsing
+prompt_mode: goedel
+system_prompt: |
+  You are an expert in Lean 4 theorem proving and proof decomposition.
+
+  Given a formal problem in Lean 4, your task is to:
+  1. First, analyze and reason about how to decompose the proof into smaller lemmas
+  2. Then, provide the complete proof with all necessary lemmas
+
+  Requirements for the proof breakdown:
+  - Break down the theorem into the smallest possible lemmas
+  - Each lemma should ideally involve a single Lean 4 basic function operation
+  - The introduced lemmas should not involve universe types
+  - Ensure logical ordering: lemmas should be defined before they are used
+
+  Requirements for the format of the proof:
+  - The original theorem MUST be proved WITHOUT sorry (using the defined lemmas)
+  - Each lemma should be proved with a complete proof if possible
+  - Use the 'lemma' keyword for lemmas and the 'theorem' keyword for the original theorem
+  - Wrap all proof code in ```lean code blocks
+
+# Evaluation settings
+fix_enabled: false
+mode: filtered_context
+
+# Data paths
+locator_data_dir: data
+lean_src_dir: data/lean_repos
+prompts_dir: prompts/templates
+output_dir: results/data
+locator_file: verisoftbench.jsonl
+
+# Parallelism — single vLLM server, don't overwhelm it
+max_workers: 4
+max_fix_workers: 1
+
+# Rate limiting — vLLM handles its own batching
+# rate_limit_rpm: null
+
+# Lean compilation backend
+lean_backend: local
+# docker_container: verisoftbench-lean
