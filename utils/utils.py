@@ -316,19 +316,21 @@ def _extract_lean_codeblocks(output: str) -> str:
 def _split_lemmas_and_proof(code: str, thm_name: str = "") -> tuple:
     """Split extracted Lean code into (auxiliary_lemmas, proof_body).
 
-    The main theorem is identified by matching ``thm_name`` or by being the
-    last ``theorem`` declaration in the code.  Everything else that is a
-    ``lemma`` or ``theorem`` declaration before it is treated as auxiliary.
-    The proof body is extracted from the main theorem (everything after the
-    ``:= by`` or ``:=`` separator).
+    Goedel's model often generates full files (imports, namespaces, defs,
+    lemmas).  We extract only ``lemma``/``theorem`` declarations, identify
+    the main one by name, and return everything else as auxiliary lemmas.
+    The proof body is extracted from the main declaration.
     """
     if not code.strip():
         return "", ""
 
-    # Split into top-level declarations
-    # Each declaration starts with lemma/theorem/def at column 0
+    # Extract only lemma/theorem declarations (skip imports, defs, namespaces, etc.)
+    # Each declaration starts at column 0 with optional modifiers
     decl_pattern = re.compile(
-        r'^((?:private\s+|protected\s+|noncomputable\s+)*(?:theorem|lemma)\b.*?)(?=\n(?:(?:private\s+|protected\s+|noncomputable\s+)*(?:theorem|lemma|def|abbrev|instance|structure|inductive|class)\b)|\Z)',
+        r'^((?:private\s+|protected\s+|noncomputable\s+)*(?:theorem|lemma)\b.*?)'
+        r'(?=\n(?:(?:private\s+|protected\s+|noncomputable\s+)*'
+        r'(?:theorem|lemma|def|abbrev|instance|structure|inductive|class|namespace|section|end|open|variable|import|#)\b)'
+        r'|\Z)',
         re.MULTILINE | re.DOTALL,
     )
     decls = decl_pattern.findall(code)
@@ -337,36 +339,57 @@ def _split_lemmas_and_proof(code: str, thm_name: str = "") -> tuple:
         # No declarations found — treat entire code as proof body
         return "", code.strip()
 
-    # Find the main theorem
+    # Find the main theorem by name (prefer exact match on short name,
+    # excluding partial matches like "genMatIsVandermonde_core")
     main_idx = len(decls) - 1  # default: last declaration
     if thm_name:
-        # Try to match by name (last component or full name)
         name_parts = thm_name.split(".")
         short_name = name_parts[-1]
+        # First pass: exact short name match (word boundary both sides)
         for i, d in enumerate(decls):
-            # Match "theorem <name>" allowing for namespace prefixes
-            if re.search(r'\b(?:theorem|lemma)\s+(?:\S+\.)*' + re.escape(short_name) + r'\b', d):
+            if re.search(r'\b(?:theorem|lemma)\s+(?:\S+\.)*' + re.escape(short_name) + r'\s*[\[\({:]',  d):
                 main_idx = i
+        # If no exact match, try looser match (last occurrence)
+        else:
+            for i, d in enumerate(decls):
+                if re.search(r'\b(?:theorem|lemma)\s+(?:\S+\.)*' + re.escape(short_name) + r'\b', d):
+                    main_idx = i
 
     main_decl = decls[main_idx]
     aux_decls = [d for i, d in enumerate(decls) if i != main_idx]
 
     # Extract proof body from main theorem
+    # Strip trailing "end Namespace" lines from the declaration
+    main_decl = re.sub(r'\n\s*end\s+\S+\s*$', '', main_decl).rstrip()
+
     proof_body = ""
     # Look for ":= by" pattern
     by_match = re.search(r':=\s*(by\b.*)', main_decl, re.DOTALL)
     if by_match:
         proof_body = by_match.group(1).rstrip()
     else:
-        # Look for ":= " (term-mode proof)
-        assign_match = re.search(r':=\s*(.*)', main_decl, re.DOTALL)
-        if assign_match:
+        # Look for ":=" at the end of a line (the proof separator in Lean 4),
+        # then capture everything on subsequent lines as the proof body.
+        # This avoids matching := inside named arguments like (α := α).
+        assign_match = re.search(r':=\s*$\s*(.*)', main_decl, re.MULTILINE | re.DOTALL)
+        if assign_match and assign_match.group(1).strip():
             proof_body = assign_match.group(1).rstrip()
         else:
-            # Look for "where" proof
-            where_match = re.search(r'(\bwhere\b.*)', main_decl, re.DOTALL)
-            if where_match:
-                proof_body = where_match.group(1).rstrip()
+            # Fallback: last := in the declaration
+            all_assigns = list(re.finditer(r':=\s*', main_decl))
+            if all_assigns:
+                last = all_assigns[-1]
+                proof_body = main_decl[last.end():].rstrip()
+            else:
+                # Look for "where" proof
+                where_match = re.search(r'(\bwhere\b.*)', main_decl, re.DOTALL)
+                if where_match:
+                    proof_body = where_match.group(1).rstrip()
+                else:
+                    # Look for pattern-match proof (| pat => expr)
+                    pipe_match = re.search(r'(\n\s*\|.*)', main_decl, re.DOTALL)
+                    if pipe_match:
+                        proof_body = pipe_match.group(1).strip()
 
     aux_lemmas = "\n\n".join(d.strip() for d in aux_decls)
 
