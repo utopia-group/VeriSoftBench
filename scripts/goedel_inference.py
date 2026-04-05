@@ -120,7 +120,11 @@ def run_inference(
     user_prompt = build_goedel_user_prompt(entry)
 
     results = []
-    for i in range(num_samples):
+    # Use vLLM's n parameter for batched sampling (much faster than sequential)
+    max_per_call = 8  # vLLM handles up to 8 well per request
+    remaining = num_samples
+    while remaining > 0:
+        batch_n = min(max_per_call, remaining)
         try:
             response = client.chat.completions.create(
                 model=model_id,
@@ -130,24 +134,27 @@ def run_inference(
                 ],
                 temperature=temperature,
                 max_tokens=max_tokens,
+                n=batch_n,
             )
 
-            choice = response.choices[0]
-            results.append({
-                "model_response": choice.message.content,
-                "finish_reason": choice.finish_reason,
-                "usage": {
-                    "prompt_tokens": response.usage.prompt_tokens,
-                    "completion_tokens": response.usage.completion_tokens,
-                } if response.usage else None,
-            })
+            for choice in response.choices:
+                results.append({
+                    "model_response": choice.message.content,
+                    "finish_reason": choice.finish_reason,
+                    "usage": {
+                        "prompt_tokens": response.usage.prompt_tokens,
+                        "completion_tokens": response.usage.completion_tokens,
+                    } if response.usage else None,
+                })
         except Exception as e:
-            print(f"  ERROR on sample {i}: {e}")
-            results.append({
-                "model_response": None,
-                "finish_reason": "error",
-                "error": str(e),
-            })
+            print(f"  ERROR on batch (n={batch_n}): {e}")
+            for _ in range(batch_n):
+                results.append({
+                    "model_response": None,
+                    "finish_reason": "error",
+                    "error": str(e),
+                })
+        remaining -= batch_n
 
     return {
         "id": entry["id"],
@@ -253,7 +260,7 @@ def main():
         print(f"Stratified sample: {len(entries)} entries across {len(set(e['lean_root'] for e in entries))} repos")
 
     # Initialize client
-    client = openai.OpenAI(api_key="dummy", base_url=args.base_url, timeout=600)
+    client = openai.OpenAI(api_key="dummy", base_url=args.base_url, timeout=3600)
 
     # Test connection
     print(f"Testing connection to {args.base_url}...")

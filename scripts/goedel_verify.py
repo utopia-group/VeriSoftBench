@@ -28,8 +28,39 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import utils.utils as utils
 from core.lean_interface import LeanREPL
-from core.evaluator import _clean_thm_stmt
 from config.paths import PROJECT_ROOT, EVAL_INPUT_DIR
+
+
+def _clean_thm_stmt(thm_stmt: str, gt_proof: str = "") -> str:
+    """Strip proof body from thm_stmt and append correct separator.
+
+    Inlined from core.evaluator to avoid importing ProverInterface deps.
+    """
+    sep_idx, sep_pat = utils.find_decl_body_separator(thm_stmt)
+    _body_pats = {':=\\s+by\\b', ':=\\s+match\\b', ':=\\s+calc\\b',
+                  ':=\\s+fun\\b', ':=\\s+λ\\b', ':=\\s+begin\\b',
+                  '\\bwhere\\b', '(?<!<)\\|\\s+(?!<)\\S'}
+    if sep_idx > 0 and sep_pat in _body_pats:
+        thm_stmt = thm_stmt[:sep_idx].rstrip()
+    elif sep_idx > 0 and thm_stmt[sep_idx:sep_idx+2] == ':=':
+        thm_stmt = thm_stmt[:sep_idx].rstrip()
+
+    gt_stripped = gt_proof.strip()
+    uses_where = gt_stripped.startswith('where')
+    uses_pipe = gt_stripped.startswith('|')
+
+    stripped = thm_stmt.rstrip()
+    if stripped.endswith(':='):
+        stripped = stripped[:-2].rstrip()
+    elif stripped.endswith('where'):
+        stripped = stripped[:-5].rstrip()
+
+    if uses_where or uses_pipe:
+        thm_stmt = stripped
+    else:
+        thm_stmt = stripped + ' :='
+
+    return thm_stmt
 
 
 def load_inference_results(path: Path) -> List[Dict]:
