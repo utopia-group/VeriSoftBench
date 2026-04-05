@@ -108,6 +108,12 @@ def build_goedel_user_prompt(entry: Dict[str, Any]) -> str:
     return f"Formal Problem:\n{context_and_theorem}"
 
 
+def estimate_prompt_tokens(system_prompt: str, user_prompt: str) -> int:
+    """Rough token estimate: ~4 chars per token for code, plus overhead."""
+    total_chars = len(system_prompt) + len(user_prompt)
+    return int(total_chars / 3.5) + 50  # conservative estimate + chat overhead
+
+
 def run_inference(
     client: openai.OpenAI,
     model_id: str,
@@ -115,11 +121,49 @@ def run_inference(
     temperature: float = 0.9,
     max_tokens: int = 16384,
     num_samples: int = 1,
+    model_context_length: int = 32768,
+    frequency_penalty: float = 0.0,
 ) -> Dict[str, Any]:
     """Run inference for a single theorem entry."""
     user_prompt = build_goedel_user_prompt(entry)
 
+    # Dynamic max_tokens: cap to fit within model context window
+    est_prompt = estimate_prompt_tokens(GOEDEL_SYSTEM_PROMPT, user_prompt)
+    margin = 64  # small safety margin
+    effective_max_tokens = min(max_tokens, model_context_length - est_prompt - margin)
+
+    if effective_max_tokens < 1024:
+        print(f"  WARNING: prompt too large ({est_prompt} est tokens), only {effective_max_tokens} tokens left for generation")
+    if effective_max_tokens != max_tokens:
+        print(f"  Capped max_tokens: {max_tokens} -> {effective_max_tokens} (prompt ~{est_prompt} tokens)")
+
+    if effective_max_tokens <= 0:
+        # Prompt alone exceeds context — skip this theorem
+        return {
+            "id": entry["id"],
+            "thm_name": entry["thm_name"],
+            "lean_root": entry["lean_root"],
+            "rel_path": entry["rel_path"],
+            "category": entry.get("category", ""),
+            "thm_stmt": entry.get("thm_stmt", ""),
+            "user_prompt": user_prompt,
+            "system_prompt": GOEDEL_SYSTEM_PROMPT,
+            "samples": [{"model_response": None, "finish_reason": "error",
+                          "error": f"Prompt too large (~{est_prompt} tokens), exceeds context {model_context_length}"}
+                         for _ in range(num_samples)],
+            "inference_params": {
+                "model_id": model_id, "temperature": temperature,
+                "max_tokens": max_tokens, "effective_max_tokens": 0,
+            },
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+
     results = []
+    # Build extra kwargs for the API call
+    extra_kwargs = {}
+    if frequency_penalty > 0:
+        extra_kwargs["frequency_penalty"] = frequency_penalty
+
     # Use vLLM's n parameter for batched sampling (much faster than sequential)
     max_per_call = 8  # vLLM handles up to 8 well per request
     remaining = num_samples
@@ -133,8 +177,9 @@ def run_inference(
                     {"role": "user", "content": user_prompt},
                 ],
                 temperature=temperature,
-                max_tokens=max_tokens,
+                max_tokens=effective_max_tokens,
                 n=batch_n,
+                **extra_kwargs,
             )
 
             for choice in response.choices:
@@ -170,6 +215,8 @@ def run_inference(
             "model_id": model_id,
             "temperature": temperature,
             "max_tokens": max_tokens,
+            "effective_max_tokens": effective_max_tokens,
+            "frequency_penalty": frequency_penalty,
         },
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
@@ -236,6 +283,10 @@ def main():
                         help="Directory containing verisoftbench.jsonl")
     parser.add_argument("--temperature", type=float, default=0.9)
     parser.add_argument("--max-tokens", type=int, default=16384)
+    parser.add_argument("--model-context-length", type=int, default=32768,
+                        help="Model's max context window (default: 32768)")
+    parser.add_argument("--frequency-penalty", type=float, default=0.0,
+                        help="Frequency penalty to reduce repetition loops (0.0-2.0)")
     parser.add_argument("--num-samples", type=int, default=1,
                         help="Samples per theorem (pass@k)")
     parser.add_argument("--task-ids", type=str, default=None,
@@ -298,7 +349,8 @@ def main():
 
     print(f"\nStarting inference: {total} theorems, {args.num_samples} sample(s) each")
     print(f"Output: {output_path}")
-    print(f"Params: temp={args.temperature}, max_tokens={args.max_tokens}")
+    print(f"Params: temp={args.temperature}, max_tokens={args.max_tokens}, "
+          f"context={args.model_context_length}, freq_penalty={args.frequency_penalty}")
     print("=" * 60)
 
     with open(output_path, "a", encoding="utf-8") as f:
@@ -315,6 +367,8 @@ def main():
                 temperature=args.temperature,
                 max_tokens=args.max_tokens,
                 num_samples=args.num_samples,
+                model_context_length=args.model_context_length,
+                frequency_penalty=args.frequency_penalty,
             )
 
             # Track stats
