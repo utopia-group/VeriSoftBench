@@ -28,12 +28,13 @@ set -euo pipefail
 export VLLM_WORKER_MULTIPROC_METHOD=spawn
 
 WORK_DIR="/scratch/qchen/verisoftbench-goedel"
+PROJECT_DIR="/project/aip-qchen/qchen/verisoftbench-goedel"
 MODEL_ID="Goedel-LM/Goedel-Code-Prover-8B"
 VLLM_PORT=8000
-# Single output file across all jobs — resume appends new results
-OUTPUT_FILE="${WORK_DIR}/results/goedel_full_pass8.jsonl"
+# Results go to persistent project storage; scratch is working space only
+OUTPUT_FILE="${PROJECT_DIR}/results/goedel_full_pass8.jsonl"
 
-mkdir -p "${WORK_DIR}/results"
+mkdir -p "${WORK_DIR}/results" "${PROJECT_DIR}/results"
 
 DONE=$(wc -l < "${OUTPUT_FILE}" 2>/dev/null || echo 0)
 echo "============================================"
@@ -91,3 +92,6 @@ echo "============================================"
 
 kill ${VLLM_PID} 2>/dev/null || true
 wait ${VLLM_PID} 2>/dev/null || true
+
+# Backup to scratch as well
+cp "${OUTPUT_FILE}" "${WORK_DIR}/results/goedel_full_pass8.jsonl" 2>/dev/null || true
