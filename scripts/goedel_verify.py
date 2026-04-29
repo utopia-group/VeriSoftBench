@@ -16,6 +16,7 @@ Usage:
 import argparse
 import json
 import re
+import subprocess
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -86,13 +87,16 @@ def load_benchmark_entries(data_dir: Path) -> Dict[int, Dict]:
     return entries
 
 
+SAMPLE_TIMEOUT = 120  # seconds per sample
+
+
 def verify_single_result(
     result: Dict,
     entry: Dict,
     lean_repl: LeanREPL,
     lean_src_dir: Path,
 ) -> Dict:
-    """Verify all samples for one theorem."""
+    """Verify all samples for one theorem sequentially."""
     thm_name = result["thm_name"]
     lean_root = result["lean_root"]
     rel_path = result["rel_path"]
@@ -117,14 +121,30 @@ def verify_single_result(
 
     for sample_idx, sample in enumerate(result.get("samples", [])):
         raw_output = sample.get("model_response", "")
+        finish_reason = sample.get("finish_reason", "")
+
         if not raw_output:
             verified_samples.append({
                 "sample_idx": sample_idx,
-                "finish_reason": sample.get("finish_reason", "error"),
+                "finish_reason": finish_reason or "error",
                 "compilation_success": False,
                 "compilation_error": "No model output",
                 "extracted_proof": "",
                 "extracted_lemmas": "",
+            })
+            continue
+
+        # Skip degenerate outputs: model stuck in repetition loops
+        # (e.g. "field.field.field." x20, "True → True → True →" x20)
+        if re.search(r'(.{10,50})\1{14,}', raw_output):
+            verified_samples.append({
+                "sample_idx": sample_idx,
+                "finish_reason": finish_reason,
+                "compilation_success": False,
+                "compilation_error": "Degenerate output: repetitive pattern detected",
+                "extracted_proof": "",
+                "extracted_lemmas": "",
+                "model_response": raw_output,
             })
             continue
 
@@ -135,7 +155,7 @@ def verify_single_result(
         if not proof:
             verified_samples.append({
                 "sample_idx": sample_idx,
-                "finish_reason": sample.get("finish_reason", ""),
+                "finish_reason": finish_reason,
                 "compilation_success": False,
                 "compilation_error": "Failed to parse proof from model output",
                 "extracted_proof": "",
@@ -160,31 +180,51 @@ def verify_single_result(
         # Clean leaked identifiers
         proof, lemmas = utils.clean_leaked_identifiers(entry, proof, lemmas)
 
-        # Verify
+        # Verify directly — no multiprocessing
+        success = False
+        error_msg = ""
         try:
-            success, error_msg = lean_repl.verify_proof(
-                thm_name=thm_name,
-                repo_name=lean_root,
-                rel_path=rel_path,
-                local_context=verif_ctx,
-                theorem_stmt=thm_stmt,
-                theorem_proof=proof,
-                proof_id=f"goedel_{sample_idx}",
-                aux_lemmas=lemmas,
-                suffix=suffix,
+            s, e = lean_repl.verify_proof(
+                thm_name=thm_name, repo_name=lean_root, rel_path=rel_path,
+                local_context=verif_ctx, theorem_stmt=thm_stmt,
+                theorem_proof=proof, proof_id=f"goedel_{sample_idx}",
+                aux_lemmas=lemmas, suffix=suffix,
             )
-        except Exception as e:
-            success = False
-            error_msg = f"Verification exception: {e}"
+            success = s
+            error_msg = e if not s else ""
+        except subprocess.TimeoutExpired:
+            error_msg = f"Timeout ({SAMPLE_TIMEOUT}s) during Lean compilation"
+        except Exception as ex:
+            error_msg = str(ex)
 
         if success:
             any_success = True
+            verified_samples.append({
+                "sample_idx": sample_idx,
+                "finish_reason": finish_reason,
+                "compilation_success": True,
+                "compilation_error": None,
+                "extracted_proof": proof,
+                "extracted_lemmas": lemmas,
+                "model_response": raw_output,
+            })
+            # Early exit: for pass@k, one success is enough
+            for skip_idx in range(sample_idx + 1, len(result.get("samples", []))):
+                verified_samples.append({
+                    "sample_idx": skip_idx,
+                    "finish_reason": "skipped",
+                    "compilation_success": False,
+                    "compilation_error": "Skipped (earlier sample proved)",
+                    "extracted_proof": "",
+                    "extracted_lemmas": "",
+                })
+            break
 
         verified_samples.append({
             "sample_idx": sample_idx,
-            "finish_reason": sample.get("finish_reason", ""),
-            "compilation_success": success,
-            "compilation_error": error_msg if not success else None,
+            "finish_reason": finish_reason,
+            "compilation_success": False,
+            "compilation_error": error_msg,
             "extracted_proof": proof,
             "extracted_lemmas": lemmas,
             "model_response": raw_output,
@@ -205,18 +245,29 @@ def verify_single_result(
 def _build_verif_context_standalone(
     lean_repl, lean_src_dir, lean_root, rel_path, imports, local_ctx, thm_stmt, thm_name
 ) -> str:
-    """Build verification context (simplified version of evaluator method)."""
+    """Build verification context from source file.
+
+    Tries: local filesystem first, then Docker container, then fallback.
+    """
     if lean_root == "iris-lean":
         imports = [imp.replace("import src.", "import ") for imp in imports]
 
     fallback_ctx = "\n".join(imports) + "\n" + local_ctx
+    full_content = None
 
+    # Try local filesystem
     try:
         full_file_path = lean_src_dir / lean_root / rel_path
-        if not full_file_path.exists():
-            return fallback_ctx
-        full_content = full_file_path.read_text(encoding="utf-8")
+        if full_file_path.exists():
+            full_content = full_file_path.read_text(encoding="utf-8")
     except Exception:
+        pass
+
+    # Skip Docker reads for context — they cause deadlocks when interleaved
+    # with verify_proof's Docker exec calls. The fallback context from JSONL
+    # (imports + local_ctx) is sufficient for most theorems.
+
+    if full_content is None:
         return fallback_ctx
 
     verif_ctx = utils.get_content_before_theorem(full_content, thm_stmt, thm_name=thm_name)

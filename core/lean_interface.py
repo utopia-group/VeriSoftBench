@@ -174,18 +174,28 @@ class LeanREPL:
         )
 
     def _docker_write_file(self, container_path: str, content: str, timeout: int = 30):
-        """Write file content into the Docker container via docker exec."""
-        docker_cmd = [
-            "docker", "exec", "-i", self.docker_container,
-            "tee", container_path
-        ]
-        return subprocess.run(
-            docker_cmd,
-            input=content,
-            capture_output=True,
-            text=True,
-            timeout=timeout
-        )
+        """Write file content into the Docker container via docker cp.
+
+        Uses docker cp instead of 'docker exec -i tee' because the latter
+        hangs on large files (>10KB) due to stdin pipe buffering issues.
+        """
+        import tempfile
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.lean', delete=False,
+                                          encoding='utf-8') as f:
+            f.write(content)
+            tmp_path = f.name
+        try:
+            result = subprocess.run(
+                ["docker", "cp", tmp_path,
+                 f"{self.docker_container}:{container_path}"],
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+            )
+            return result
+        finally:
+            import os
+            os.unlink(tmp_path)
 
     def _docker_read_file(self, container_path: str, timeout: int = 30) -> str | None:
         """Read file content from the Docker container. Returns None if file doesn't exist."""
@@ -228,7 +238,7 @@ class LeanREPL:
                 container_file = f"{DOCKER_LEAN_REPOS_DIR}/{repo_name}/{rel_path}"
                 return self._docker_exec(
                     ["lake", "env", "lean", container_file],
-                    project_root, timeout=600
+                    project_root, timeout=120
                 )
             cmd = ["lake", "build", module_name]
             result = subprocess.run(
@@ -236,7 +246,7 @@ class LeanREPL:
                 cwd=project_root,
                 capture_output=True,
                 text=True,
-                timeout=600
+                timeout=120
             )
             return result
         elif "verina" in str(project_root):
@@ -245,7 +255,7 @@ class LeanREPL:
                 container_file = f"{DOCKER_LEAN_REPOS_DIR}/{repo_name}/{rel_path}"
                 return self._docker_exec(
                     ["lake", "env", "lean", container_file],
-                    project_root, timeout=600
+                    project_root, timeout=120
                 )
             file_path = project_root / rel_path
             result = subprocess.run(
@@ -262,7 +272,7 @@ class LeanREPL:
                 container_file = f"{DOCKER_LEAN_REPOS_DIR}/{repo_name}/{rel_path}"
                 return self._docker_exec(
                     ["lake", "env", "lean", container_file],
-                    project_root, timeout=600
+                    project_root, timeout=120
                 )
             file_path = project_root / rel_path
             result = subprocess.run(

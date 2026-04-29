@@ -1,13 +1,8 @@
 """Interface to neural theorem provers."""
 
 import asyncio
-from google import genai
-from google.oauth2 import service_account
-from google.genai import types
-from anthropic import Anthropic
 from pathlib import Path
 from typing import Dict, Any, Optional, List
-import openai
 import os
 import utils.utils as utils
 import threading
@@ -82,8 +77,10 @@ class ProverInterface:
         # Store base_url for vLLM / OpenAI-compatible servers
         self.base_url = model_config.get("base_url")
 
-        # Initialize API clients based on model_name
+        # Initialize API clients based on model_name (lazy imports to avoid
+        # requiring all provider SDKs when only one is used)
         if self.model_name == "openai":
+            import openai
             self.api_key = self.api_key or os.environ.get("OPENAI_API_KEY")
             if not self.api_key and not self.base_url:
                 raise ValueError("OpenAI API key is not set; provide api_key in config or set OPENAI_API_KEY")
@@ -96,6 +93,7 @@ class ProverInterface:
                 timeout=3600,
             )
         elif self.model_name == "claude":
+            from anthropic import Anthropic
             self.api_key = self.api_key or os.environ.get("ANTHROPIC_API_KEY")
             if not self.api_key:
                 raise ValueError("Anthropic API key is not set; provide api_key in config or set ANTHROPIC_API_KEY")
@@ -104,6 +102,8 @@ class ProverInterface:
                 timeout=600.0
             )
         elif self.model_name == "gemini":
+            from google import genai
+            from google.oauth2 import service_account
             self.api_key = self.api_key or os.environ.get("GOOGLE_API_KEY")
             if self.api_key is not None:
                 self.client = genai.Client(api_key=self.api_key)
@@ -230,6 +230,7 @@ class ProverInterface:
 
     def _call_gemini(self, sys_prompt: str, user_prompt: str, **kwargs) -> List[str]:
         from concurrent.futures import ThreadPoolExecutor, as_completed
+        from google import genai
         num_samples = kwargs.get("num_samples", 1)
         temperature = kwargs.get("temperature", 1.0)
 
@@ -265,7 +266,7 @@ class ProverInterface:
                     response = self.client.models.generate_content(
                         model=self.model_id,
                         contents=user_prompt,
-                        config=types.GenerateContentConfig(
+                        config=genai.types.GenerateContentConfig(
                             system_instruction=sys_prompt,
                             temperature=temperature
                         )

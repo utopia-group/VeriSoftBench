@@ -324,16 +324,33 @@ def _split_lemmas_and_proof(code: str, thm_name: str = "") -> tuple:
     if not code.strip():
         return "", ""
 
-    # Extract only lemma/theorem declarations (skip imports, defs, namespaces, etc.)
-    # Each declaration starts at column 0 with optional modifiers
-    decl_pattern = re.compile(
-        r'^((?:private\s+|protected\s+|noncomputable\s+)*(?:theorem|lemma)\b.*?)'
-        r'(?=\n(?:(?:private\s+|protected\s+|noncomputable\s+)*'
-        r'(?:theorem|lemma|def|abbrev|instance|structure|inductive|class|namespace|section|end|open|variable|import|#)\b)'
-        r'|\Z)',
-        re.MULTILINE | re.DOTALL,
+    # Split code into top-level declaration chunks using line-by-line scanning
+    # (same approach as compute_required_ends — avoids catastrophic regex backtracking).
+    _top_level_kw = re.compile(
+        r'^(?:theorem|lemma|def|abbrev|instance|structure|inductive|class|'
+        r'namespace|section|end|open|variable|import|#)\b'
     )
-    decls = decl_pattern.findall(code)
+    _thm_kw = re.compile(r'^(?:theorem|lemma)\b')
+
+    decls = []
+    cur_lines = []
+    cur_is_thm = False
+
+    for line in code.split('\n'):
+        stripped = _strip_lean_modifiers(line.strip())
+        if _top_level_kw.match(stripped) and cur_lines:
+            # Flush previous chunk
+            if cur_is_thm:
+                decls.append('\n'.join(cur_lines))
+            cur_lines = [line]
+            cur_is_thm = bool(_thm_kw.match(stripped))
+        else:
+            if not cur_lines:
+                cur_is_thm = bool(_thm_kw.match(stripped))
+            cur_lines.append(line)
+
+    if cur_lines and cur_is_thm:
+        decls.append('\n'.join(cur_lines))
 
     if not decls:
         # No declarations found — treat entire code as proof body
