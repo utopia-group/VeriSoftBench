@@ -7,6 +7,7 @@
     {"model": "Gödel-Prover-v2", "url": "https://arxiv.org/abs/2508.03613", "setting": "Pass@8, r=0", "curated": "5.6%", "full_repo": "0.0%"}
   ],
   "aristotle": [
+    {"model": "Aleph Prover", "url": "https://alephprover.logicalintelligence.com/", "setting": "", "curated": "—", "full_repo": "94%"},
     {"model": "Aristotle", "url": "https://aristotle.harmonic.fun/", "setting": "", "curated": "—", "full_repo": "69%"},
     {"model": "Gemini-3-Pro", "setting": "Pass@8, r=3", "curated": "—", "full_repo": "65%"}
   ]
