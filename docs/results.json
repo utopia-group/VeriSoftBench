@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-05-08",
+  "last_updated": "2026-08-10",
   "full": [
     {"model": "Gemini-3-Pro", "setting": "Pass@8, r=3", "curated": "41.0%", "full_repo": "34.8%"},
     {"model": "Claude Opus 4.5", "setting": "Pass@8, r=3", "curated": "31.2%", "full_repo": "23.2%"},
@@ -8,6 +8,7 @@
   ],
   "aristotle": [
     {"model": "Aleph Prover", "url": "https://alephprover.logicalintelligence.com/", "setting": "", "curated": "—", "full_repo": "94%"},
+    {"model": "Forall", "setting": "", "curated": "—", "full_repo": "85%"},
     {"model": "Aristotle", "url": "https://aristotle.harmonic.fun/", "setting": "", "curated": "—", "full_repo": "69%"},
     {"model": "Gemini-3-Pro", "setting": "Pass@8, r=3", "curated": "—", "full_repo": "65%"}
   ]
