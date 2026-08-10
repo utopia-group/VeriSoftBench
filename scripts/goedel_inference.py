@@ -19,6 +19,7 @@ import argparse
 import json
 import os
 import random
+import re
 import sys
 import time
 from datetime import datetime, timezone
@@ -109,9 +110,16 @@ def build_goedel_user_prompt(entry: Dict[str, Any]) -> str:
 
 
 def estimate_prompt_tokens(system_prompt: str, user_prompt: str) -> int:
-    """Rough token estimate: ~4 chars per token for code, plus overhead."""
+    """Rough token estimate. Tuned conservative upper-bound to avoid the
+    server rejecting requests with HTTP 400 (max_tokens + prompt > context).
+
+    Empirically the chars/3.5 estimate undercounts by a few percent on Lean
+    code (lots of unicode + symbol tokens). We use chars/3.0 plus chat-template
+    overhead to be safe — over-estimating just means slightly less generation
+    headroom, but under-estimating wastes the entire sample.
+    """
     total_chars = len(system_prompt) + len(user_prompt)
-    return int(total_chars / 3.5) + 50  # conservative estimate + chat overhead
+    return int(total_chars / 3.0) + 200  # chat-template overhead headroom
 
 
 def run_inference(
@@ -127,9 +135,11 @@ def run_inference(
     """Run inference for a single theorem entry."""
     user_prompt = build_goedel_user_prompt(entry)
 
-    # Dynamic max_tokens: cap to fit within model context window
+    # Dynamic max_tokens: cap to fit within model context window.
+    # Margin must absorb tokenizer estimate error — too tight causes server
+    # to reject the whole request with HTTP 400 before any generation.
     est_prompt = estimate_prompt_tokens(GOEDEL_SYSTEM_PROMPT, user_prompt)
-    margin = 64  # small safety margin
+    margin = 512
     effective_max_tokens = min(max_tokens, model_context_length - est_prompt - margin)
 
     if effective_max_tokens < 1024:
@@ -167,21 +177,28 @@ def run_inference(
     # Use vLLM's n parameter for batched sampling (much faster than sequential)
     max_per_call = 8  # vLLM handles up to 8 well per request
     remaining = num_samples
+
+    def _do_call(eff_max_tokens, batch_n):
+        return client.chat.completions.create(
+            model=model_id,
+            messages=[
+                {"role": "system", "content": GOEDEL_SYSTEM_PROMPT},
+                {"role": "user", "content": user_prompt},
+            ],
+            temperature=temperature,
+            max_tokens=eff_max_tokens,
+            n=batch_n,
+            **extra_kwargs,
+        )
+
+    # Server may reject if our estimate is off; parse actual prompt tokens
+    # from its 400 message and retry once with an exact ceiling.
+    _actual_prompt_re = re.compile(r'prompt contains at least (\d+) input tokens')
+
     while remaining > 0:
         batch_n = min(max_per_call, remaining)
         try:
-            response = client.chat.completions.create(
-                model=model_id,
-                messages=[
-                    {"role": "system", "content": GOEDEL_SYSTEM_PROMPT},
-                    {"role": "user", "content": user_prompt},
-                ],
-                temperature=temperature,
-                max_tokens=effective_max_tokens,
-                n=batch_n,
-                **extra_kwargs,
-            )
-
+            response = _do_call(effective_max_tokens, batch_n)
             for choice in response.choices:
                 results.append({
                     "model_response": choice.message.content,
@@ -191,7 +208,52 @@ def run_inference(
                         "completion_tokens": response.usage.completion_tokens,
                     } if response.usage else None,
                 })
-        except Exception as e:
+        except openai.BadRequestError as e:
+            msg = str(e)
+            m = _actual_prompt_re.search(msg)
+            if m and 'maximum context length' in msg:
+                actual_prompt = int(m.group(1))
+                # vLLM's "at least N tokens" is genuinely a lower bound — observed
+                # to undercount by 250+ tokens across calls. Use a fat margin so
+                # we never need a third call.
+                retry_max = model_context_length - actual_prompt - 2048
+                if retry_max >= 1024:
+                    print(f"  Retrying batch (n={batch_n}) with exact max_tokens={retry_max} (server reported {actual_prompt} prompt tokens)")
+                    try:
+                        response = _do_call(retry_max, batch_n)
+                        for choice in response.choices:
+                            results.append({
+                                "model_response": choice.message.content,
+                                "finish_reason": choice.finish_reason,
+                                "usage": {
+                                    "prompt_tokens": response.usage.prompt_tokens,
+                                    "completion_tokens": response.usage.completion_tokens,
+                                } if response.usage else None,
+                            })
+                        # Update effective_max_tokens for any subsequent batches in this call
+                        effective_max_tokens = retry_max
+                        remaining -= batch_n
+                        continue
+                    except Exception as e2:
+                        print(f"  RETRY also failed: {e2}")
+                        for _ in range(batch_n):
+                            results.append({
+                                "model_response": None,
+                                "finish_reason": "error",
+                                "error": f"retry failed: {e2}",
+                            })
+                        remaining -= batch_n
+                        continue
+                else:
+                    print(f"  Prompt too large to fit ({actual_prompt} > {model_context_length - 1024}), skipping")
+                    for _ in range(batch_n):
+                        results.append({
+                            "model_response": None,
+                            "finish_reason": "error",
+                            "error": f"Prompt {actual_prompt} tokens exceeds context {model_context_length}",
+                        })
+                    remaining -= batch_n
+                    continue
             print(f"  ERROR on batch (n={batch_n}): {e}")
             for _ in range(batch_n):
                 results.append({
@@ -330,15 +392,24 @@ def main():
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # Resume from existing output if present
+    # Resume from existing output if present.
+    # Tolerate malformed lines (partial writes from interrupted jobs) — count
+    # and skip them rather than crashing the resume.
     completed_ids = set()
+    bad_lines = 0
     if output_path.exists():
         with open(output_path, "r") as f:
-            for line in f:
-                if line.strip():
+            for line_no, line in enumerate(f, 1):
+                if not line.strip():
+                    continue
+                try:
                     r = json.loads(line)
                     completed_ids.add(r["id"])
-        print(f"Resuming: {len(completed_ids)} already completed")
+                except json.JSONDecodeError:
+                    bad_lines += 1
+                    print(f"  WARNING: skipping malformed line {line_no} during resume")
+        print(f"Resuming: {len(completed_ids)} already completed"
+              + (f" ({bad_lines} malformed line(s) skipped)" if bad_lines else ""))
         entries = [e for e in entries if e["id"] not in completed_ids]
 
     total = len(entries)

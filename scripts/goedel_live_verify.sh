@@ -10,10 +10,12 @@
 
 set -euo pipefail
 
-REMOTE_FILE="${1:?Usage: $0 <remote_jsonl> <local_verified_output> [poll_sec]}"
-LOCAL_OUTPUT="${2:?Usage: $0 <remote_jsonl> <local_verified_output> [poll_sec]}"
+REMOTE_FILE="${1:?Usage: $0 <remote_jsonl> <local_verified_output> [poll_sec] [cluster] [job_name] [container]}"
+LOCAL_OUTPUT="${2:?Usage: $0 <remote_jsonl> <local_verified_output> [poll_sec] [cluster] [job_name] [container]}"
 POLL_SEC="${3:-30}"
 CLUSTER="${4:-vulcan}"
+JOB_NAME="${5:-goedel-full}"
+DOCKER_CONTAINER="${6:-verisoftbench-lean}"
 LOCAL_INFERENCE="results/.live_inference_cache.jsonl"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -44,7 +46,7 @@ while true; do
             --input "$LOCAL_INFERENCE" \
             --output "$LOCAL_OUTPUT" \
             --lean-backend docker \
-            --docker-container verisoftbench-test \
+            --docker-container "$DOCKER_CONTAINER" \
             --save-every 1 \
             2>&1 | grep -E 'PROVED|CHECKPOINT|complete'
 
@@ -64,7 +66,7 @@ print(f'  -> {proved}/{total} proved ({pct:.1f}%) pass@k so far')
     fi
 
     # Check if job is still running
-    JOB_DONE=$(raca ssh "$CLUSTER" "[ -f ${REMOTE_FILE} ] && [ \$(wc -l < ${REMOTE_FILE}) -eq ${CUR_LINES} ] && ! squeue -u \$(whoami) --name=goedel-pass8 -h 2>/dev/null | grep -q . && echo DONE || echo RUNNING" 2>&1 | grep -o 'DONE\|RUNNING' | tail -1)
+    JOB_DONE=$(raca ssh "$CLUSTER" "[ -f ${REMOTE_FILE} ] && [ \$(wc -l < ${REMOTE_FILE}) -eq ${CUR_LINES} ] && ! squeue -u \$(whoami) --name=${JOB_NAME} -h 2>/dev/null | grep -q . && echo DONE || echo RUNNING" 2>&1 | grep -o 'DONE\|RUNNING' | tail -1)
 
     if [ "$JOB_DONE" = "DONE" ] && [ "$CUR_LINES" -gt 0 ]; then
         echo ""
