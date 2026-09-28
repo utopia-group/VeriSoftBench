@@ -65,7 +65,7 @@
   <div class="wrap">
     <h2>Model Comparison</h2>
     <p>
-      Model performance measured by <strong>Pass@8</strong> (8 proof attempts per task).
+      Model performance is reported as success rate, using <strong>Pass@8</strong> (8 proof attempts per task) where indicated.
       <strong>Curated context</strong>: dependency-traced definitions and lemmas.
       <strong>Full repo context</strong>: entire source file.
       <em>r</em>&thinsp;=&thinsp;repair attempts with Lean error feedback (0&thinsp;=&thinsp;none).
@@ -110,8 +110,9 @@
 
     <p class="note">
       <a href="https://arxiv.org/abs/2508.03613" target="_blank">G&ouml;del-Prover-v2</a> was evaluated on 496 tasks (curated) and 44 tasks (full repo) due to context window limitations.
-      For VeriSoftBench-Aristotle, both models are evaluated on a variation of the full repo context configuration.
+      For VeriSoftBench-Aristotle, Aleph Prover, Aristotle, and Gemini-3-Pro are evaluated on a variation of the full repo context configuration.
     </p>
+    <p class="note">* Proofs checked only; reproduction code not provided.</p>
     <p class="note" id="last-updated"></p>
   </div>
 </div>
