@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-09-28",
+  "last_updated": "2026-10-13",
   "full": [
     {"model": "Gemini-3-Pro", "setting": "Pass@8, r=3", "curated": "41.0%", "full_repo": "34.8%"},
     {"model": "Claude Opus 4.5", "setting": "Pass@8, r=3", "curated": "31.2%", "full_repo": "23.2%"},
@@ -12,5 +12,8 @@
     {"model": "Forall (Astrio)", "url": "https://www.astriolabs.com/index/forall-lean-agent", "setting": "", "curated": "—", "full_repo": "85%"},
     {"model": "Aristotle", "url": "https://aristotle.harmonic.fun/", "setting": "", "curated": "—", "full_repo": "69%"},
     {"model": "Gemini-3-Pro", "setting": "Pass@8, r=3", "curated": "—", "full_repo": "65%"}
+  ],
+  "repo_provers": [
+    {"model": "Aleph Prover", "url": "https://alephprover.logicalintelligence.com/", "setting": "Pass@1", "success_rate": "94.8% (474/500)"}
   ]
 }

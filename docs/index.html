@@ -110,9 +110,33 @@
 
     <p class="note">
       <a href="https://arxiv.org/abs/2508.03613" target="_blank">G&ouml;del-Prover-v2</a> was evaluated on 496 tasks (curated) and 44 tasks (full repo) due to context window limitations.
-      For VeriSoftBench-Aristotle, Aleph Prover, Aristotle, and Gemini-3-Pro are evaluated on a variation of the full repo context configuration.
+      Repository-based evaluations on VeriSoftBench-Aristotle use the same <a href="#repository-setting">repository setting described below</a>.
     </p>
     <p class="note">* Proofs checked only; reproduction code not provided.</p>
+
+    <h3 style="font-size:0.9rem;margin-top:24px;margin-bottom:8px">VeriSoftBench-Full: Repository Provers <span style="font-weight:400;color:var(--text-3)">(500 tasks)</span></h3>
+    <p id="repository-setting" style="margin-bottom:8px">
+      This track covers all 500 tasks for provers that work inside a repository rather than from a prompt: each prover receives a checkout of each repository with the ground-truth proofs for all 500 benchmark tasks replaced by <code>sorry</code>, and may use any declaration above the target theorem.
+      Each generated proof is compiled at the theorem&rsquo;s original position against the pinned sources, so declarations below the target cannot be used.
+    </p>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th>Setting</th>
+            <th>Success rate</th>
+          </tr>
+        </thead>
+        <tbody id="results-repo-provers">
+          <tr><td colspan="3" style="text-align:center;color:var(--text-3);padding:20px">Loading&hellip;</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">
+      <strong>Toolchain upgrades:</strong> In the prover&rsquo;s workspace, five repositories (CvxLean, wadray, pcf-lean, formal-snarks, and lean-formal-reasoning-program) are upgraded to Lean v4.11 so the provers can build them.
+      Task statements are unchanged, and checking still uses the original pinned versions.
+    </p>
     <p class="note" id="last-updated"></p>
   </div>
 </div>
@@ -512,7 +536,7 @@ async function loadResults() {
     const data = await resp.json();
     const note = document.getElementById('last-updated');
 
-    function renderRows(rows, tbodyId) {
+    function renderRows(rows, tbodyId, repositoryProvers = false) {
       const tbody = document.getElementById(tbodyId);
       if (!rows || !rows.length) {
         tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text-3);padding:20px">No results yet.</td></tr>';
@@ -520,19 +544,22 @@ async function loadResults() {
       }
       tbody.innerHTML = rows.map(r => {
         const name = r.url ? '<a href="' + r.url + '" target="_blank">' + r.model + '</a>' : r.model;
-        const label = r.setting ? name + ' <span style="color:var(--text-3);font-weight:400;font-size:0.82rem">(' + r.setting + ')</span>' : '<strong>' + name + '</strong>';
+        const label = !repositoryProvers && r.setting ? name + ' <span style="color:var(--text-3);font-weight:400;font-size:0.82rem">(' + r.setting + ')</span>' : '<strong>' + name + '</strong>';
+        const values = repositoryProvers ? [r.setting, r.success_rate] : [r.curated, r.full_repo];
         return '<tr><td>' + label + '</td>' +
-          '<td class="mono">' + r.curated + '</td>' +
-          '<td class="mono">' + r.full_repo + '</td></tr>';
+          values.map(value => '<td class="mono">' + value + '</td>').join('') + '</tr>';
       }).join('');
     }
 
     renderRows(data.full, 'results-full');
     renderRows(data.aristotle, 'results-aristotle');
+    renderRows(data.repo_provers, 'results-repo-provers', true);
     if (data.last_updated) note.textContent = 'Last updated: ' + data.last_updated;
   } catch (e) {
-    document.getElementById('results-full').innerHTML =
-      '<tr><td colspan="3" style="text-align:center;color:var(--text-3);padding:20px">Could not load results.</td></tr>';
+    ['results-full', 'results-aristotle', 'results-repo-provers'].forEach(id => {
+      document.getElementById(id).innerHTML =
+        '<tr><td colspan="3" style="text-align:center;color:var(--text-3);padding:20px">Could not load results.</td></tr>';
+    });
   }
 }
 function copyBibtex() {
