@@ -9,7 +9,7 @@
   "aristotle": [
     {"model": "Emergence AI*", "url": "https://emergence.ai/", "setting": "", "curated": "—", "full_repo": "99%"},
     {"model": "Aleph Prover", "url": "https://alephprover.logicalintelligence.com/", "setting": "", "curated": "—", "full_repo": "94%"},
-    {"model": "Forall", "setting": "", "curated": "—", "full_repo": "85%"},
+    {"model": "Forall (Astrio)", "url": "https://www.astriolabs.com/index/forall-lean-agent", "setting": "", "curated": "—", "full_repo": "85%"},
     {"model": "Aristotle", "url": "https://aristotle.harmonic.fun/", "setting": "", "curated": "—", "full_repo": "69%"},
     {"model": "Gemini-3-Pro", "setting": "Pass@8, r=3", "curated": "—", "full_repo": "65%"}
   ]
