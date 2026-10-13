@@ -7,7 +7,7 @@
     {"model": "Gödel-Prover-v2", "url": "https://arxiv.org/abs/2508.03613", "setting": "Pass@8, r=0", "curated": "5.6%", "full_repo": "0.0%"}
   ],
   "aristotle": [
-    {"model": "Emergence AI*", "setting": "", "curated": "—", "full_repo": "99%"},
+    {"model": "Emergence AI*", "url": "https://emergence.ai/", "setting": "", "curated": "—", "full_repo": "99%"},
     {"model": "Aleph Prover", "url": "https://alephprover.logicalintelligence.com/", "setting": "", "curated": "—", "full_repo": "94%"},
     {"model": "Forall", "setting": "", "curated": "—", "full_repo": "85%"},
     {"model": "Aristotle", "url": "https://aristotle.harmonic.fun/", "setting": "", "curated": "—", "full_repo": "69%"},
